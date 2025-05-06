@@ -111,3 +111,33 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/update', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
 
+
+// routes/web.php - Add these routes
+
+// Seller Registration and Payment
+Route::get('/register/seller', [App\Http\Controllers\Auth\RegisterController::class, 'showSellerRegistrationForm'])->name('register.seller');
+Route::post('/register/seller', [App\Http\Controllers\Auth\RegisterController::class, 'registerSeller'])->name('register.seller.post');
+Route::get('/seller/payment', [App\Http\Controllers\PaymentController::class, 'showPaymentForm'])->name('seller.payment');
+Route::post('/seller/payment/process', [App\Http\Controllers\PaymentController::class, 'processPayment'])->name('seller.payment.process');
+Route::get('/seller/payment/success', [App\Http\Controllers\PaymentController::class, 'paymentSuccess'])->name('seller.payment.success');
+
+// Admin Property Approval
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/properties/pending', [App\Http\Controllers\Admin\PropertyController::class, 'pendingProperties'])->name('properties.pending');
+    Route::post('/properties/{property}/approve', [App\Http\Controllers\Admin\PropertyController::class, 'approveProperty'])->name('properties.approve');
+    Route::post('/properties/{property}/reject', [App\Http\Controllers\Admin\PropertyController::class, 'rejectProperty'])->name('properties.reject');
+});
+// Admin Property Approval
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/properties/pending', [App\Http\Controllers\Admin\PropertyController::class, 'pendingProperties'])->name('admin.properties.pending');
+    Route::post('/admin/properties/{property}/approve', [App\Http\Controllers\Admin\PropertyController::class, 'approveProperty'])->name('admin.properties.approve');
+    Route::post('/admin/properties/{property}/reject', [App\Http\Controllers\Admin\PropertyController::class, 'rejectProperty'])->name('admin.properties.reject');
+});
+
+Route::middleware(['admin'])->group(function () {
+    // Routes that require admin access
+});
+
+Route::middleware(['seller'])->group(function () {
+    // Routes that require seller access
+});

@@ -17,7 +17,6 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -37,5 +36,32 @@ class RegisterController extends Controller
 
         return redirect('login')->with('success', 'تم تسجيلك بنجاح. يمكنك الآن تسجيل الدخول.');
     }
+    
+    public function showSellerRegistrationForm()
+    {
+        return view('auth.seller-register');
+    }
+    
+    public function registerSeller(Request $request)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone' => ['required', 'string', 'max:15'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'terms' => ['required'],
+        ]);
+        
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'role' => 'pending_seller', // Set as pending until payment
+        ]);
 
+        Auth::login($user);
+
+        return redirect()->route('seller.payment');
+    }
 }
