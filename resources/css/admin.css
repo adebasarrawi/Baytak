@@ -1,0 +1,12 @@
+/* resources/css/admin.css */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
