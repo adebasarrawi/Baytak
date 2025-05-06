@@ -57,7 +57,8 @@ class RegisterController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
-            'role' => 'pending_seller', // Set as pending until payment
+            'role' => 'user',
+            'user_type' => 'pending_seller', // Set as pending until payment
         ]);
 
         Auth::login($user);

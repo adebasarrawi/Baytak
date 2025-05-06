@@ -266,7 +266,11 @@ class PropertyController extends Controller
             return redirect()->route('login')->with('error', 'You must be logged in to view your properties.');
         }
         
-        $properties = Auth::user()->properties()->orderBy('created_at', 'desc')->paginate(10);
+        // Use direct query instead of relationship to avoid potential issues
+        $properties = Property::where('user_id', Auth::id())
+                        ->orderBy('created_at', 'desc')
+                        ->paginate(10);
+                        
         return view('properties.my-properties', compact('properties'));
     }
     

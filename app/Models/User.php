@@ -15,7 +15,11 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'role',
         'user_type',
+        'profile_image',
+        'bio',
+        'address',
     ];
 
     protected $hidden = [
@@ -37,14 +41,11 @@ class User extends Authenticatable
         return $this->hasMany(Property::class);
     }
 
-   
-
     public function notifications()
     {
         return $this->hasMany(Notification::class);
     }
   
- 
     public function favorites()
     {
         return $this->hasMany(Favorite::class);
@@ -55,10 +56,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Property::class, 'favorites', 'user_id', 'property_id')->withTimestamps();
     }
+    
     public function isSeller()
-{
-    return $this->user_type === 'seller';
+    {
+        return $this->user_type === 'seller';
+    }
 }
-}
-
-

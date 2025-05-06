@@ -4,8 +4,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PaymentTransaction;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -52,16 +54,16 @@ class PaymentController extends Controller
             // For now, we'll simulate a successful payment
             
             // If payment successful, update user type
-            $user = Auth::user();
-            $user->user_type = 'seller';
-            $user->save();
+            $userId = Auth::id();
             
-            // Create the PaymentTransaction model if you haven't already
-            // php artisan make:model PaymentTransaction -m
-            
+            // Use DB facade to update directly
+            DB::table('users')
+                ->where('id', $userId)
+                ->update(['user_type' => 'seller']);
+                
             // Record the payment
             PaymentTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 'amount' => 3.00,
                 'currency' => 'JOD',
                 'payment_method' => $request->payment_method,
@@ -82,7 +84,10 @@ class PaymentController extends Controller
      */
     public function paymentSuccess()
     {
-        if (Auth::user()->user_type !== 'seller') {
+        // Get fresh user data from database
+        $user = User::find(Auth::id());
+        
+        if (!$user || $user->user_type !== 'seller') {
             return redirect()->route('home');
         }
         
