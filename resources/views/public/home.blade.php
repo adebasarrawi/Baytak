@@ -411,8 +411,8 @@
               <a href="{{ url('/seller-register') }}" class="btn btn-primary btn-lg w-100 py-3">Become a Seller</a>
             @endif
           @else
-            <a href="{{ url('/seller-register') }}?user_type=seller" class="btn btn-primary btn-lg w-100 py-3">Register as Seller</a>
-            <p class="mt-3 small">Already have an account? <a href="{{ route('login') }}?redirect=properties/create" class="text-primary">Login</a></p>
+            <a href="{{ url('/seller-register') }}?user_type=seller" class="btn btn-primary btn-lg w-100 py-3"></a>
+            <p class="mt-3 small">Already have an account? <a href="{{ route('login') }}?redirect=properties/create" class="text-primary">Login</a>Add New Property</p>
           @endif
         </div>
       </div>

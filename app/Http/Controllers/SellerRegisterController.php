@@ -38,12 +38,10 @@ class SellerRegisterController extends Controller
                     ->with('step', 1);
             }
 
-            // حفظ البيانات في الجلسة للمرحلة الثانية
             $request->session()->put('seller_step1', $request->except('_token', 'step', 'password_confirmation'));
             return redirect()->route('seller.register')->with('step', 2);
         }
 
-        // التحقق من الخطوة الثانية (الدفع)
         if ($request->step == 2) {
             $validator = Validator::make($request->all(), [
                 'card_number' => 'required|string|min:16|max:16',
@@ -58,9 +56,7 @@ class SellerRegisterController extends Controller
                     ->with('step', 2);
             }
 
-            // هنا يجب تنفيذ عملية الدفع (في الواقع ستحتاج إلى استخدام بوابة دفع مثل Stripe)
 
-            // إنشاء حساب البائع بعد نجاح الدفع
             $step1Data = $request->session()->get('seller_step1');
 
             $user = User::create([
@@ -70,12 +66,11 @@ class SellerRegisterController extends Controller
                 'role' => 'seller',
                 'shop_name' => $step1Data['shop_name'],
                 'phone' => $step1Data['phone'],
-                'payment_status' => 'paid', // في الواقع يجب التحقق من نجاح الدفع أولاً
+                'payment_status' => 'paid', 
             ]);
 
             $request->session()->forget('seller_step1');
 
-            // تسجيل الدخول تلقائياً
             auth()->login($user);
 
             return redirect()->route('seller.dashboard')->with('success', 'تم تسجيلك كبائع بنجاح!');
