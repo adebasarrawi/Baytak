@@ -408,10 +408,10 @@
             @if(Auth::user()->user_type === 'seller')
               <a href="{{ url('/properties/create') }}" class="btn btn-primary btn-lg w-100 py-3">Add New Property</a>
             @else
-              <a href="{{ url('/home') }}" class="btn btn-primary btn-lg w-100 py-3">Become a Seller</a>
+              <a href="{{ url('/seller-register') }}" class="btn btn-primary btn-lg w-100 py-3">Become a Seller</a>
             @endif
           @else
-            <a href="{{ route('register') }}?user_type=seller" class="btn btn-primary btn-lg w-100 py-3">Register as Seller</a>
+            <a href="{{ url('/seller-register') }}?user_type=seller" class="btn btn-primary btn-lg w-100 py-3">Register as Seller</a>
             <p class="mt-3 small">Already have an account? <a href="{{ route('login') }}?redirect=properties/create" class="text-primary">Login</a></p>
           @endif
         </div>

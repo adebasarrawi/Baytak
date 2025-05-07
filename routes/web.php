@@ -66,12 +66,20 @@ Route::get('/properties.create', function () {
     return view('properties.create');
 });
 
+Route::get('/seller-register', function () {
+    return view('public.seller-register');
+});
 
 
-// Authentication routes
-Route::get('/register', function () {
-    return view('public.register');
-})->name('register');
+Route::get('/estimate', function () {
+    return view('public.estimate');
+});
+
+
+// // Authentication routes
+// Route::get('/register', function () {
+//     return view('public.register');
+// })->name('register');
 
 Route::get('/login', function () {
     return view('public.login');
@@ -121,18 +129,18 @@ Route::get('/seller/payment', [App\Http\Controllers\PaymentController::class, 's
 Route::post('/seller/payment/process', [App\Http\Controllers\PaymentController::class, 'processPayment'])->name('seller.payment.process');
 Route::get('/seller/payment/success', [App\Http\Controllers\PaymentController::class, 'paymentSuccess'])->name('seller.payment.success');
 
-// Admin Property Approval
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/properties/pending', [App\Http\Controllers\Admin\PropertyController::class, 'pendingProperties'])->name('properties.pending');
-    Route::post('/properties/{property}/approve', [App\Http\Controllers\Admin\PropertyController::class, 'approveProperty'])->name('properties.approve');
-    Route::post('/properties/{property}/reject', [App\Http\Controllers\Admin\PropertyController::class, 'rejectProperty'])->name('properties.reject');
-});
-// Admin Property Approval
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/properties/pending', [App\Http\Controllers\Admin\PropertyController::class, 'pendingProperties'])->name('admin.properties.pending');
-    Route::post('/admin/properties/{property}/approve', [App\Http\Controllers\Admin\PropertyController::class, 'approveProperty'])->name('admin.properties.approve');
-    Route::post('/admin/properties/{property}/reject', [App\Http\Controllers\Admin\PropertyController::class, 'rejectProperty'])->name('admin.properties.reject');
-});
+// // Admin Property Approval
+// Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+//     Route::get('/properties/pending', [App\Http\Controllers\Admin\PropertyController::class, 'pendingProperties'])->name('properties.pending');
+//     Route::post('/properties/{property}/approve', [App\Http\Controllers\Admin\PropertyController::class, 'approveProperty'])->name('properties.approve');
+//     Route::post('/properties/{property}/reject', [App\Http\Controllers\Admin\PropertyController::class, 'rejectProperty'])->name('properties.reject');
+// });
+// // Admin Property Approval
+// Route::middleware(['auth', 'admin'])->group(function () {
+//     Route::get('/admin/properties/pending', [App\Http\Controllers\Admin\PropertyController::class, 'pendingProperties'])->name('admin.properties.pending');
+//     Route::post('/admin/properties/{property}/approve', [App\Http\Controllers\Admin\PropertyController::class, 'approveProperty'])->name('admin.properties.approve');
+//     Route::post('/admin/properties/{property}/reject', [App\Http\Controllers\Admin\PropertyController::class, 'rejectProperty'])->name('admin.properties.reject');
+// });
 
 Route::middleware(['admin'])->group(function () {
     // Routes that require admin access

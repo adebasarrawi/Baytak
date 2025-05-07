@@ -1,4 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.public.app')
+@section('title', 'Seller Registration')
+@php
+    $step = $force_step ?? session()->get('step', 1);
+@endphp
 
 @section('content')
 
@@ -36,7 +40,7 @@
 <input type="hidden" id="currentStep" value="{{ $step }}">
                         <!-- Step 1: Basic Information -->
                         <div id="step1-container" class="step-content">
-                            <h4 class="mb-4 text-primary">Seller Information</h4>
+                            <h4 class="mb-4 text-primary">Registration</h4>
                             
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -705,7 +709,6 @@
                 }, 3000);
             }
         }
-        // أضف هذا في نهاية ملف الـ script
 console.log("Script loaded");
 console.log("Current step:", currentStep);
 console.log("Step 1 container:", document.getElementById('step1-container'));

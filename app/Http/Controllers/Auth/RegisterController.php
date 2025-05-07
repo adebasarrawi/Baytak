@@ -34,7 +34,7 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-        return redirect('login')->with('success', 'تم تسجيلك بنجاح. يمكنك الآن تسجيل الدخول.');
+        return redirect('login')->with('success', 'Registration successful! Please log in.');
     }
     
     public function showSellerRegistrationForm()

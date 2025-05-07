@@ -14,10 +14,11 @@
           <li><a href="{{ url('/services') }}">Services</a></li>
           <li><a href="{{ url('/about') }}">About</a></li>
           <li><a href="{{ url('/contact') }}">Contact Us</a></li>
+          <li><a href="{{ url('/seller-register') }}">Register</a></li>
+
           
           @guest
             <!-- Show these items only for guests (not logged in) -->
-            <li><a href="{{ url('/register') }}">Register</a></li>
             <li><a href="{{ url('/login') }}">Login</a></li>
           @else
             <!-- Show these items only for authenticated users -->
