@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 class PropertyController extends Controller
 {
     /**
-     * دالة للتحقق ما إذا كان المستخدم مدير النظام
+     * Verificar si el usuario es administrador
      *
      * @return bool
      */
@@ -25,7 +25,7 @@ class PropertyController extends Controller
     }
     
     /**
-     * دالة للتحقق ما إذا كان المستخدم مخول للتعديل على العقار
+     * Verificar si el usuario puede gestionar la propiedad
      *
      * @param Property $property
      * @return bool
@@ -36,18 +36,18 @@ class PropertyController extends Controller
     }
 
     /**
-     * Display a listing of the properties.
+     * Mostrar listado de propiedades
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
-        // Create a query builder
+        // Crear consulta base
         $query = Property::with(['type', 'area', 'images', 'features'])
             ->where('is_approved', true);
         
-        // Apply filters if provided
+        // Aplicar filtros si se proporcionan
         if ($request->filled('property_type')) {
             $query->where('property_type_id', $request->property_type);
         }
@@ -65,51 +65,61 @@ class PropertyController extends Controller
             });
         }
         
-        // Order properties
+        // Ordenar propiedades
         $query->orderBy('is_featured', 'desc')
               ->orderBy('created_at', 'desc');
         
-        // Get paginated results
+        // Obtener resultados paginados
         $properties = $query->paginate(12);
         
-        // Get property types for filter
+        // Obtener tipos de propiedades para el filtro
         $propertyTypes = PropertyType::all();
         
         return view('public.properties', compact('properties', 'propertyTypes'));
     }
     
     /**
-     * Display the specified property.
+     * Mostrar los detalles de una propiedad
      *
      * @param  \App\Models\Property  $property
      * @return \Illuminate\View\View
      */
     public function show(Property $property)
     {
-        // Load relationships
+        // Cargar relaciones
         $property->load(['type', 'area', 'images', 'features', 'user']);
         
-        // Increment view count
+        // Incrementar contador de vistas
         $property->increment('views');
         
         return view('properties.show', compact('property'));
     }
     
     /**
-     * Show the form for creating a new property.
-     *
+     * Mostrar formulario para crear una nueva propiedad
+     * 
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function create()
     {
-        // Check if user is authenticated
+        // Verificar si el usuario está autenticado
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to create a property listing.');
+            return redirect()->route('login', ['redirect' => 'properties/create'])
+                ->with('error', 'You must be logged in to create a property listing.');
         }
         
-        // Check if user is a seller
+        // Verificar si el usuario es un vendedor
         if (Auth::user()->user_type !== 'seller') {
-            return redirect()->route('seller.payment')->with('error', 'You need to complete your seller registration first.');
+            // Si el usuario es un usuario normal (no vendedor)
+            if (Auth::user()->user_type === 'user') {
+                return redirect()->route('seller.payment')
+                    ->with('info', 'To list properties, you need to complete your seller registration.');
+            } 
+            // Si el usuario es un vendedor pendiente
+            elseif (Auth::user()->user_type === 'pending_seller') {
+                return redirect()->route('seller.payment')
+                    ->with('info', 'You need to complete the payment to activate your seller account.');
+            }
         }
         
         $propertyTypes = PropertyType::all();
@@ -119,24 +129,26 @@ class PropertyController extends Controller
     }
     
     /**
-     * Store a newly created property in storage.
+     * Almacenar una nueva propiedad en la base de datos
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
-        // Check if user is authenticated
+        // Verificar si el usuario está autenticado
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to create a property listing.');
+            return redirect()->route('login')
+                ->with('error', 'You must be logged in to create a property listing.');
         }
         
-        // Check if user is a seller
+        // Verificar si el usuario es un vendedor
         if (Auth::user()->user_type !== 'seller') {
-            return redirect()->route('seller.payment')->with('error', 'You need to complete your seller registration first.');
+            return redirect()->route('seller.payment')
+                ->with('error', 'You need to complete your seller registration first.');
         }
         
-        // Validate the request
+        // Validar la solicitud
         $validated = $request->validate([
             'title' => 'required|max:255',
             'description' => 'required',
@@ -150,10 +162,9 @@ class PropertyController extends Controller
             'purpose' => 'required|in:sale,rent',
             'images' => 'required|array|min:1',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'primary_image' => 'required|integer|min:0'
         ]);
 
-        // Create property
+        // Crear propiedad
         $property = Property::create([
             'user_id' => Auth::id(),
             'title' => $validated['title'],
@@ -167,27 +178,31 @@ class PropertyController extends Controller
             'address' => $validated['address'],
             'purpose' => $validated['purpose'],
             'slug' => Str::slug($validated['title'] . '-' . uniqid()),
-            'is_approved' => false, // Needs admin approval
+            'is_approved' => null, // null means pending approval
             'is_featured' => false
         ]);
         
-        // Process uploaded images
-        $this->uploadPropertyImages($property, $request->file('images'), $validated['primary_image']);
+        // Procesar imágenes subidas - la primera imagen será la primaria
+        if ($request->hasFile('images')) {
+            $this->uploadPropertyImages($property, $request->file('images'));
+        }
 
-        return redirect()->route('my-properties')->with('success', 'Property submitted for approval. You will be notified once it is reviewed.');
+        return redirect()->route('properties.my')
+            ->with('success', 'Property submitted for approval. You will be notified once it is reviewed.');
     }
     
     /**
-     * Show the form for editing the specified property.
+     * Mostrar formulario para editar una propiedad
      *
      * @param  \App\Models\Property  $property
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function edit(Property $property)
     {
-        // Check if the current user is authorized to edit this property
+        // Verificar si el usuario actual está autorizado para editar esta propiedad
         if (!$this->canManageProperty($property)) {
-            return redirect()->route('properties.index')->with('error', 'You are not authorized to edit this property.');
+            return redirect()->route('properties.index')
+                ->with('error', 'You are not authorized to edit this property.');
         }
         
         $propertyTypes = PropertyType::all();
@@ -197,7 +212,7 @@ class PropertyController extends Controller
     }
     
     /**
-     * Update the specified property in storage.
+     * Actualizar la propiedad en la base de datos
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Property  $property
@@ -205,12 +220,13 @@ class PropertyController extends Controller
      */
     public function update(Request $request, Property $property)
     {
-        // Check if the current user is authorized to update this property
+        // Verificar si el usuario actual está autorizado para actualizar esta propiedad
         if (!$this->canManageProperty($property)) {
-            return redirect()->route('properties.index')->with('error', 'You are not authorized to update this property.');
+            return redirect()->route('properties.index')
+                ->with('error', 'You are not authorized to update this property.');
         }
         
-        // Validate the request
+        // Validar la solicitud
         $validated = $request->validate([
             'title' => 'required|max:255',
             'description' => 'required',
@@ -227,7 +243,7 @@ class PropertyController extends Controller
             'primary_image' => 'nullable|integer'
         ]);
 
-        // Update property
+        // Actualizar propiedad
         $property->update([
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -239,69 +255,67 @@ class PropertyController extends Controller
             'area_id' => $validated['area_id'],
             'address' => $validated['address'],
             'purpose' => $validated['purpose'],
-            'is_approved' => false, // Reset approval when updated
+            'is_approved' => null, // Reset to pending approval when updated
         ]);
         
-        // Handle image uploads if new images were provided
+        // Gestionar subidas de imágenes si se proporcionaron nuevas
         if ($request->hasFile('images')) {
-            $this->uploadPropertyImages($property, $request->file('images'), $validated['primary_image'] ?? null);
+            $this->uploadPropertyImages($property, $request->file('images'));
         }
         
-        // If only primary image was changed (no new uploads)
+        // Si solo se cambió la imagen principal (sin nuevas subidas)
         elseif (isset($validated['primary_image'])) {
             $this->updatePrimaryImage($property, $validated['primary_image']);
         }
 
-        return redirect()->route('my-properties')->with('success', 'Property updated successfully and awaiting approval.');
+        return redirect()->route('properties.my')
+            ->with('success', 'Property updated successfully and is pending approval.');
     }
     
     /**
-     * Display the seller's properties.
+     * Mostrar las propiedades del vendedor
      *
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function myProperties()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to view your properties.');
-        }
-        
-        // Use direct query instead of relationship to avoid potential issues
         $properties = Property::where('user_id', Auth::id())
-                        ->orderBy('created_at', 'desc')
-                        ->paginate(10);
-                        
-        return view('properties.my-properties', compact('properties'));
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(8);
+        
+        return view('properties.my', compact('properties'));
     }
     
     /**
-     * Remove the specified property from storage.
+     * Eliminar la propiedad específica
      *
      * @param  \App\Models\Property  $property
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Property $property)
     {
-        // Check if the current user is authorized to delete this property
+        // Verificar si el usuario actual está autorizado para eliminar esta propiedad
         if (!$this->canManageProperty($property)) {
-            return redirect()->route('properties.index')->with('error', 'You are not authorized to delete this property.');
+            return redirect()->route('properties.index')
+                ->with('error', 'You are not authorized to delete this property.');
         }
         
-        // Delete all associated images from storage
+        // Eliminar todas las imágenes asociadas del almacenamiento
         foreach ($property->images as $image) {
             if (Storage::disk('public')->exists($image->image_path)) {
                 Storage::disk('public')->delete($image->image_path);
             }
         }
         
-        // Delete the property (will cascade delete images due to foreign key constraints)
+        // Eliminar la propiedad (las imágenes se eliminarán en cascada debido a las restricciones de clave externa)
         $property->delete();
         
-        return redirect()->route('my-properties')->with('success', 'Property deleted successfully.');
+        return redirect()->route('properties.my')
+            ->with('success', 'Property deleted successfully.');
     }
     
     /**
-     * Method to delete a specific image.
+     * Método para eliminar una imagen específica
      *
      * @param  int  $imageId
      * @return \Illuminate\Http\RedirectResponse
@@ -310,46 +324,46 @@ class PropertyController extends Controller
     {
         $image = PropertyImage::findOrFail($imageId);
         
-        // Check if the current user is the owner of this property
+        // Verificar si el usuario actual es el propietario de esta propiedad
         $property = $image->property;
         
         if (!$this->canManageProperty($property)) {
-            return redirect()->back()->with('error', 'You are not authorized to delete this image.');
+            return redirect()->back()
+                ->with('error', 'You are not authorized to delete this image.');
         }
         
-        // Get the file path
+        // Obtener la ruta del archivo
         $filePath = $image->image_path;
         
-        // Delete from storage if file exists
+        // Eliminar del almacenamiento si el archivo existe
         if (Storage::disk('public')->exists($filePath)) {
             Storage::disk('public')->delete($filePath);
         }
         
-        // Delete from database
+        // Eliminar de la base de datos
         $image->delete();
         
         return back()->with('success', 'Image deleted successfully.');
     }
     
     /**
-     * Helper method to handle image uploads.
+     * Método auxiliar para manejar subidas de imágenes
      *
      * @param  \App\Models\Property  $property
      * @param  array  $images
-     * @param  int|null  $primaryImageIndex
      * @return void
      */
-    private function uploadPropertyImages(Property $property, array $images, $primaryImageIndex)
+    private function uploadPropertyImages(Property $property, array $images)
     {
         $i = 0;
         foreach ($images as $image) {
-            // Store the image in the storage/app/public/properties/images directory
+            // Almacenar la imagen en el directorio storage/app/public/properties/images
             $path = $image->store('properties/images', 'public');
             
-            // Create the image record
+            // Crear el registro de la imagen
             $property->images()->create([
                 'image_path' => $path,
-                'is_primary' => ($i == $primaryImageIndex),
+                'is_primary' => ($i == 0), // La primera imagen siempre será la principal
                 'sort_order' => $i
             ]);
             
@@ -358,7 +372,7 @@ class PropertyController extends Controller
     }
     
     /**
-     * Helper method to update the primary image.
+     * Método auxiliar para actualizar la imagen principal
      *
      * @param  \App\Models\Property  $property
      * @param  int  $primaryImageId
@@ -366,10 +380,10 @@ class PropertyController extends Controller
      */
     private function updatePrimaryImage(Property $property, $primaryImageId)
     {
-        // Reset all images to non-primary
+        // Reestablecer todas las imágenes a no-primarias
         $property->images()->update(['is_primary' => false]);
         
-        // Set the selected image as primary
+        // Establecer la imagen seleccionada como primaria
         if (is_numeric($primaryImageId)) {
             $property->images()->where('id', $primaryImageId)->update(['is_primary' => true]);
         }

@@ -38,7 +38,7 @@ class PropertyImageController extends Controller
         $request->validate([
             'images' => 'required|array|min:1',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'primary_image' => 'nullable|string'
+            // 'primary_image' => 'nullable|string'
         ]);
         
         // Upload new images

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
 class SellerMiddleware
@@ -11,19 +12,15 @@ class SellerMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // Check if the user is logged in and is a seller
-        if (!Auth::check() || Auth::user()->user_type !== 'seller') {
-            // If not, redirect to home with error message
-            return redirect()->route('home')->with('error', 'You need to be a registered seller to access this page.');
+        if (Auth::check() && Auth::user()->user_type === 'seller') {
+            // ...
+            return $next($request);
+        } else {
+            return redirect()->route('home')->with('error', 'You do not have permission to access this page. Only sellers can access this area.');
         }
-
-        // Continue processing the request
-        return $next($request);
     }
 }

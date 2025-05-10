@@ -6,8 +6,9 @@
   <meta name="author" content="Untree.co" />
   <meta name="description" content="" />
   <meta name="keywords" content="bootstrap, bootstrap5" />
-  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="auth-check" content="{{ auth()->check() ? 'true' : 'false' }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
 
   <title>@yield('title')</title>
 

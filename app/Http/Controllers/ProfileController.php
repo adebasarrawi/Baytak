@@ -4,25 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 
 class ProfileController extends Controller
 {
     /**
-     * Create a new controller instance.
-     * 
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    /**
-     * Show the user's profile.
-     *
-     * @return \Illuminate\View\View
+     * Display the user's profile.
      */
     public function show()
     {
@@ -32,59 +22,89 @@ class ProfileController extends Controller
 
     /**
      * Show the form for editing the user's profile.
-     *
-     * @return \Illuminate\View\View
      */
     public function edit()
     {
-        $user = Auth::user();
-        return view('public.profile-edit', compact('user'));
+        return view('public.profile-edit');
     }
 
     /**
-     * Update the user's profile.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Update the user's profile information.
      */
     public function update(Request $request)
     {
-        $user = Auth::user();
-        
+        // Validate the request data
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'phone' => 'nullable|string|max:20',
+            'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
+            'phone' => 'nullable|string|max:15',
             'address' => 'nullable|string|max:255',
-            'bio' => 'nullable|string',
+            'bio' => 'nullable|string|max:1000',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-        
-        // Prepare update data
+
+        // Prepare data for update
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
             'bio' => $request->bio,
-            'updated_at' => now()
         ];
-        
-        // Handle profile image upload if provided
+
+        // Handle image upload if present
         if ($request->hasFile('profile_image')) {
-            // Delete old image if it exists
-            if ($user->profile_image) {
-                Storage::disk('public')->delete($user->profile_image);
+            $image = $request->file('profile_image');
+            
+            // Get current user to remove old image if exists
+            $currentUser = DB::table('users')->where('id', Auth::id())->first();
+            
+            // Delete old image if exists
+            if ($currentUser->profile_image) {
+                Storage::disk('public')->delete($currentUser->profile_image);
             }
             
-            $imagePath = $request->file('profile_image')->store('profile-images', 'public');
+            // Store the new image in the public storage
+            $imagePath = $image->store('profile-images', 'public');
             $updateData['profile_image'] = $imagePath;
         }
-        
-        // Update user using query builder
-        DB::table('users')->where('id', $user->id)->update($updateData);
-        
-        return redirect()->route('profile.show')->with('success', 'Profile updated successfully!');
+
+        // Execute the update in the database
+        DB::table('users')
+            ->where('id', Auth::id())
+            ->update($updateData);
+
+        return redirect()->route('profile')->with('success', 'Profile updated successfully!');
     }
-    
+
+    /**
+     * Update the user's password.
+     */
+    public function updatePassword(Request $request)
+    {
+        // Validate the request data
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Get current user
+        $user = DB::table('users')->where('id', Auth::id())->first();
+
+        // Check if current password is correct
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()
+                ->withErrors(['current_password' => 'The current password is incorrect.'])
+                ->withInput();
+        }
+
+        // Update password
+        DB::table('users')
+            ->where('id', Auth::id())
+            ->update([
+                'password' => Hash::make($request->password)
+            ]);
+
+        return redirect()->route('profile')->with('success', 'Password changed successfully!');
+    }
 }

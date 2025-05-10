@@ -6,17 +6,18 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth; // قم بإضافة هذا السطر
 
 class SellerRegisterController extends Controller
 {
     public function showRegistrationForm()
     {
         // Initialize step in session if not set
-    if (!session()->has('step')) {
-        session(['step' => 1]);
-    }
-    
-    return view('auth.seller-register');
+        if (!session()->has('step')) {
+            session(['step' => 1]);
+        }
+        
+        return view('public.seller-register');
     }
 
     public function register(Request $request)
@@ -56,7 +57,6 @@ class SellerRegisterController extends Controller
                     ->with('step', 2);
             }
 
-
             $step1Data = $request->session()->get('seller_step1');
 
             $user = User::create([
@@ -71,9 +71,9 @@ class SellerRegisterController extends Controller
 
             $request->session()->forget('seller_step1');
 
-            auth()->login($user);
+            Auth::login($user);
 
-            return redirect()->route('seller.dashboard')->with('success', 'تم تسجيلك كبائع بنجاح!');
+            return redirect()->route('seller.dashboard')->with('success', 'SUCCESS');
         }
     }
 }

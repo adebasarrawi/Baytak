@@ -4,26 +4,19 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class UpdateUserTypeColumnLength extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('customer'); // يمكن أن تكون 'admin', 'seller', 'customer'
-            $table->string('payment_status')->nullable(); // لحالة الدفع
+            $table->string('user_type', 20)->change(); // Increase to a larger value like 20
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->string('user_type')->change(); // Revert to default
         });
     }
-};
+}

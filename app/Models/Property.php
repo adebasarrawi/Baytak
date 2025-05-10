@@ -56,8 +56,7 @@ class Property extends Model
         return $this->belongsToMany(Feature::class, 'property_feature');
     }
 
-    public function images()
-    {
+    public function images() {
         return $this->hasMany(PropertyImage::class);
     }
 

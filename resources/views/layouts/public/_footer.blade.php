@@ -5,8 +5,7 @@
         <div class="row">
             <div class="col-lg-4 footer-section">
                 <div class="footer-logo">Baytak</div>
-                <p class="footer-about">We are dedicated to providing the best service to our customers. Our mission
-                    is to create innovative solutions that make a difference in people's lives.</p>
+                <p class="footer-about">Baytak is a comprehensive real estate platform designed to simplify property transactions. We leverage cutting-edge technology to connect buyers, sellers, and renters, making real estate search and management seamless and transparent.</p>
                 <div class="social-links">
                     <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
@@ -18,44 +17,45 @@
             <div class="col-lg-2 col-md-6 footer-section">
                 <h5>Quick Links</h5>
                 <ul class="footer-links">
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Services</a></li>
-                    <li><a href="#">Products</a></li>
-                    <li><a href="#">Contact</a></li>
-                    <li><a href="#">Careers</a></li>
+                    <li><a href="{{ url('/about') }}">About Us</a></li>
+                    <li><a href="{{ url('/services') }}">Services</a></li>
+                    <li><a href="{{ url('/properties') }}">Properties</a></li>
+                    <li><a href="{{ url('/contact') }}">Contact</a></li>
                 </ul>
             </div>
-
             <div class="col-lg-2 col-md-6 footer-section">
-                <h5>Support</h5>
-                <ul class="footer-links">
-                    <li><a href="#">FAQ</a></li>
-                    <li><a href="#">Help Center</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Contact Support</a></li>
+    <h5>Why Baytak ?</h5>
+    <ul class="footer-links">
+        <li><a href="#">Easy Search</a></li>
+        <li><a  href="#"  >Trusted Listings</a></li>
+        <li><a  href="#">Fast Support</a></li>
+        <li><a  href="#">Fair Prices</a></li>
+    </ul>
+</div>
+  <!-- Contact Info -->
+  <div class="col-lg-4 col-md-6">
+                <h5 class="mb-4">Contact Info</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Amman/Jordan
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-phone me-2"></i>
+                        <a href="tel:+962772328028" class="footer-link" style="color:white">+962772328028</a>
+                    </li>
+                    <li class="mb-3">
+                        <i class="fas fa-envelope me-2"></i>
+                        <a href="mailto:adeba.alsarrawi@gmail.com" class="footer-link" style="color:white">adeba.alsarrawi@gmail.com</a>
+                    </li>
                 </ul>
-            </div>
-
-            <div class="col-lg-4 footer-section">
-                <h5>Newsletter</h5>
-                <p class="footer-about">Subscribe to our newsletter for updates, news, and exclusive offers.</p>
-                <div class="footer-newsletter">
-                    <input type="email" placeholder="Enter your email">
-                    <button class="newsletter-btn">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-                </div>
             </div>
         </div>
 
+
         <div class="footer-bottom">
-            <ul class="footer-bottom-links">
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Terms of Service</a></li>
-                <li><a href="#">Cookie Policy</a></li>
-            </ul>
-            <p>© 2024 CompanyName. All rights reserved.</p>
+          
+            <p>© 2025 Baytak. All rights reserved.</p>
         </div>
     </div>
 </footer>

@@ -33,29 +33,37 @@
             @endif
             <h4>{{ $user->name }}</h4>
             <p class="text-muted small">{{ $user->email }}</p>
+            @if($user->user_type === 'seller')
+              <div class="badge bg-primary py-2 px-3 mb-2">Seller Account</div>
+            @endif
           </div>
           
           <div class="list-group">
-            <a href="{{ route('profile.show') }}" class="list-group-item list-group-item-action active">
+            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action active">
               <i class="fas fa-user me-2"></i> Account Information
             </a>
             <a href="{{ route('profile.edit') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-edit me-2"></i> Edit Profile
             </a>
-            <!-- Add more links here like property listings, favorites, etc. -->
-            <a href="#" class="list-group-item list-group-item-action">
-              <i class="fas fa-home me-2"></i> My Properties
-            </a>
-            <a href="#" class="list-group-item list-group-item-action">
+            <!-- Only show the My Properties link for sellers -->
+            @if($user->user_type === 'seller')
+              <a href="{{ route('properties.my') }}" class="list-group-item list-group-item-action">
+                <i class="fas fa-home me-2"></i> My Properties
+              </a>
+            @endif
+            <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-heart me-2"></i> Favorites
             </a>
-            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action text-danger">
-              <i class="fas fa-sign-out-alt me-2"></i> Logout
-            </a>
-            
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-              @csrf
-            </form>
+            <a href="{{ route('logout') }}" 
+   onclick="event.preventDefault(); 
+            document.getElementById('logout-form').submit();" 
+   class="list-group-item list-group-item-action text-danger">
+  <i class="fas fa-sign-out-alt me-2"></i> Logout
+</a>
+
+<form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+  @csrf
+</form>
           </div>
         </div>
       </div>
@@ -110,6 +118,21 @@
               </div>
             </div>
             <hr>
+            <div class="row mb-3">
+              <div class="col-sm-3">
+                <p class="mb-0 text-muted">Account Type</p>
+              </div>
+              <div class="col-sm-9">
+                <p class="mb-0">
+                  @if($user->user_type === 'seller')
+                    <span class="badge bg-primary">Seller</span>
+                  @else
+                    <span class="badge bg-secondary">Regular User</span>
+                  @endif
+                </p>
+              </div>
+            </div>
+            <hr>
             <div class="row">
               <div class="col-sm-3">
                 <p class="mb-0 text-muted">Bio</p>
@@ -120,23 +143,26 @@
             </div>
           </div>
           <div class="card-footer bg-white">
-            <a href="{{ route('profile.edit') }}" class="btn btn-primary">Edit Information</a>
-          </div>
+          <a href="{{ route('profile.edit') }}" class="btn btn-primary">Edit Information</a>          </div>
         </div>
         
         <!-- Account Stats -->
         <div class="row">
-          <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body text-center p-4">
-                <div class="icon-box mb-3 mx-auto">
-                  <i class="fas fa-home fa-3x text-primary"></i>
-                </div>
-                <h5>{{ $user->properties()->count() }}</h5>
-                <p class="text-muted">Properties Listed</p>
+          <!-- Show property stats only for sellers -->
+          @if($user->user_type === 'seller')
+            <div class="col-md-4 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-body text-center p-4">
+                  <div class="icon-box mb-3 mx-auto">
+                    <i class="fas fa-home fa-3x text-primary"></i>
+                  </div>
+                  <h5>{{ $user->properties()->count() }}</h5>
+                  <p class="text-muted">Properties Listed</p>
+                  <a href="{{ route('properties.my') }}" class="btn btn-sm btn-outline-primary mt-2">View All</a>               
+                 </div>
               </div>
             </div>
-          </div>
+          @endif
           <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
               <div class="card-body text-center p-4">

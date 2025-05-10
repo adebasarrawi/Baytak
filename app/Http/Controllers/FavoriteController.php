@@ -74,6 +74,6 @@ class FavoriteController extends Controller
                   ->where('user_id', $user->id);
         })->paginate(12);
         
-        return view('public.favorites', compact('favorites'));
+        return view('favorites.index', compact('favorites'));
     }
 }

@@ -1,5 +1,4 @@
 <?php
-// app/Models/PaymentTransaction.php
 
 namespace App\Models;
 
@@ -13,7 +12,7 @@ class PaymentTransaction extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
         'user_id',
@@ -21,12 +20,11 @@ class PaymentTransaction extends Model
         'currency',
         'payment_method',
         'transaction_id',
-        'status',
-        'notes'
+        'status'
     ];
 
     /**
-     * Get the user that owns the transaction.
+     * Get the user that owns the payment transaction.
      */
     public function user()
     {

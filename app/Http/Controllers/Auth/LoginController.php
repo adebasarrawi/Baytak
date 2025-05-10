@@ -23,7 +23,7 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
     
-            return redirect()->route('profile.show'); // تغيير هنا ليرجع لصفحة البروفايل مباشرة
+            return redirect()->route('profile'); // تغيير هنا ليرجع لصفحة البروفايل مباشرة
         }
     
         return back()->withErrors([
