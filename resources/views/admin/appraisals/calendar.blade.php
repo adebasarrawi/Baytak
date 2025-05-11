@@ -167,79 +167,37 @@
 @endpush
 
 @push('scripts')
-<!-- FullCalendar JS -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const calendarEl = document.getElementById('calendar');
-        
-        // Initialize the calendar
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-            },
-            events: {!! json_encode($events) !!},
-            eventTimeFormat: {
-                hour: 'numeric',
-                minute: '2-digit',
-                meridiem: 'short'
-            },
-            displayEventTime: true,
-            eventClick: function(info) {
-                showEventDetails(info.event);
-                info.jsEvent.preventDefault(); // don't navigate to event.url
-            },
-            eventClassNames: function(arg) {
-                // Add custom classes based on status
-                return [`event-${arg.event.extendedProps.status}`];
-            },
-            dayMaxEvents: true, // allow "more" link when too many events
-            themeSystem: 'bootstrap',
-        });
-        
-        calendar.render();
-        
-        // Function to show event details in modal
-        function showEventDetails(event) {
-            // Populate modal with event details
-            document.getElementById('modal-client').textContent = event.title;
-            document.getElementById('modal-address').textContent = event.extendedProps.address;
-            
-            // Format the date time
-            const date = new Date(event.start);
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit'
-            };
-            document.getElementById('modal-datetime').textContent = date.toLocaleDateString('en-US', options);
-            
-            // Set status with badge
-            const statusBadges = {
-                'pending': '<span class="badge badge-warning">Pending</span>',
-                'confirmed': '<span class="badge badge-success">Confirmed</span>',
-                'completed': '<span class="badge badge-primary">Completed</span>',
-                'cancelled': '<span class="badge badge-danger">Cancelled</span>'
-            };
-            document.getElementById('modal-status').innerHTML = statusBadges[event.extendedProps.status] || '';
-            
-            // Set phone
-            document.getElementById('modal-phone').textContent = event.extendedProps.phone || 'N/A';
-            
-            // Set edit link
-            document.getElementById('modal-edit-link').href = event.url;
-            
-            // Show the modal
-            $('#appointmentModal').modal('show');
-        }
-    });
+<!-- In your calendar.blade.php view -->
+<div id="calendar" data-events="{{ json_encode($events ?? []) }}"></div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    
+    // Get events data from data attribute
+    let eventsData = [];
+    try {
+        eventsData = JSON.parse(calendarEl.dataset.events);
+    } catch (e) {
+        console.error("Error parsing events data:", e);
+        eventsData = [];
+    }
+    
+    // Initialize the calendar
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
+        events: eventsData,
+        // ...rest of your calendar configuration
+    });
+    
+    calendar.render();
+    // ...rest of your function
+});
 </script>
 @endpush
 endsection

@@ -84,16 +84,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return view('admin.dashboard');
     })->name('dashboard');
     
-    Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function() {
-        // Appraisal Routes
-        Route::get('/appraisals', [AppraisalController::class, 'index'])->name('admin.appraisals.index');
-        Route::get('/appraisals/calendar', [AppraisalController::class, 'calendar'])->name('appraisals.calendar');
-        Route::get('/appraisals/create', [AppraisalController::class, 'create'])->name('appraisals.create');
-        Route::get('/appraisals/{appraisal}/edit', [AppraisalController::class, 'edit'])->name('appraisals.edit');
-        Route::put('/appraisals/{appraisal}', [AppraisalController::class, 'update'])->name('appraisals.update');
-        Route::put('/appraisals/{appraisal}/status', [AppraisalController::class, 'updateStatus'])->name('appraisals.update-status');
-        Route::delete('/appraisals/{appraisal}', [AppraisalController::class, 'destroy'])->name('appraisals.destroy');
-    });
+    // Appraisal Routes - FIXED: removed nested prefix
+    Route::get('/appraisals', [AppraisalController::class, 'index'])->name('appraisals.index');
+    Route::get('/appraisals/calendar', [AppraisalController::class, 'calendar'])->name('appraisals.calendar');
+    Route::get('/appraisals/create', [AppraisalController::class, 'create'])->name('appraisals.create');
+    Route::get('/appraisals/{appraisal}/edit', [AppraisalController::class, 'edit'])->name('appraisals.edit');
+    Route::put('/appraisals/{appraisal}', [AppraisalController::class, 'update'])->name('appraisals.update');
+    Route::put('/appraisals/{appraisal}/status', [AppraisalController::class, 'updateStatus'])->name('appraisals.update-status');
+    Route::delete('/appraisals/{appraisal}', [AppraisalController::class, 'destroy'])->name('appraisals.destroy');
+    
+    // Add a route for fetching calendar events via AJAX
+    Route::get('/appraisals/events', [AppraisalController::class, 'getEvents'])->name('appraisals.events');
     
     // User routes if needed
     Route::get('/users/{user}', function() {
@@ -125,7 +126,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     
     // Payment Routes for Sellers
-    Route::get('/seller/payment', [PaymentController::class, 'showPaymentForm'])->name('seller.payment.form');
+    Route::get('/seller/payment', [PaymentController::class, 'showPaymentForm'])->name('seller.payment');
     Route::post('/seller/payment', [PaymentController::class, 'processPayment'])->name('seller.payment.process');
     Route::get('/seller/payment/success', function () {
         return view('seller.payment_success');
@@ -136,3 +137,8 @@ Route::middleware(['auth'])->group(function () {
         return view('seller.dashboard');
     })->name('seller.dashboard');
 });
+
+// Add this inside your admin routes group
+Route::get('/dashboard-test', function () {
+    return view('admin.dashboard');  // Make sure you created this file as in Solution 2
+})->name('dashboard-test');

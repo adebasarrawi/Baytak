@@ -18,7 +18,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next)
     {
         // Check if the user is logged in and is an admin
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        if (!Auth::check() || (Auth::user()->role !== 'admin' && Auth::user()->role !== 'seller')) {
             // If not, redirect to home with error message
             return redirect()->route('home')->with('error', 'You do not have permission to access this page.');
         }

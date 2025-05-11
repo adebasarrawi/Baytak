@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AppointmentStatusUpdated;
+use Illuminate\Support\Facades\Log;
 
 
 class AppraisalController extends Controller
@@ -103,7 +104,7 @@ class AppraisalController extends Controller
                 Mail::to($appraisal->client_email)->send(new AppointmentStatusUpdated($appraisal));
             } catch (\Exception $e) {
                 // Log error but don't stop the process
-                \Log::error('Failed to send appointment status email: ' . $e->getMessage());
+                Log::error('Failed to send appointment status email: ' . $e->getMessage());
             }
         }
         
@@ -157,56 +158,56 @@ class AppraisalController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function calendar()
-    {
-        // Get all appointments for calendar
-        $appraisals = PropertyAppraisal::all();
-        
-        // Format appointments for fullcalendar
-        $events = [];
-        
-        foreach ($appraisals as $appraisal) {
-            // Determine color based on status
-            $color = '';
-            switch ($appraisal->status) {
-                case 'pending':
-                    $color = '#ffc107'; // yellow
-                    break;
-                case 'confirmed':
-                    $color = '#28a745'; // green
-                    break;
-                case 'completed':
-                    $color = '#0d6efd'; // blue
-                    break;
-                case 'cancelled':
-                    $color = '#dc3545'; // red
-                    break;
-                default:
-                    $color = '#6c757d'; // gray
-            }
-            
-            // Format date and time
-            $dateTime = $appraisal->appointment_date . ' ' . $appraisal->appointment_time;
-            
-            // Add to events array
-            $events[] = [
-                'id' => $appraisal->id,
-                'title' => $appraisal->client_name,
-                'start' => $dateTime,
-                'url' => route('admin.appraisals.edit', $appraisal->id),
-                'backgroundColor' => $color,
-                'borderColor' => $color,
-                'extendedProps' => [
-                    'status' => $appraisal->status,
-                    'address' => $appraisal->property_address,
-                    'phone' => $appraisal->client_phone,
-                ]
-            ];
+    // In your AppraisalController.php
+public function calendar()
+{
+    // Get all appointments for calendar
+    $appraisals = PropertyAppraisal::all();
+    
+    // Format appointments for fullcalendar
+    $events = [];
+    
+    foreach ($appraisals as $appraisal) {
+        // Determine color based on status
+        $color = '';
+        switch ($appraisal->status) {
+            case 'pending':
+                $color = '#ffc107'; // yellow
+                break;
+            case 'confirmed':
+                $color = '#28a745'; // green
+                break;
+            case 'completed':
+                $color = '#0d6efd'; // blue
+                break;
+            case 'cancelled':
+                $color = '#dc3545'; // red
+                break;
+            default:
+                $color = '#6c757d'; // gray
         }
         
-        return view('admin.appraisals.calendar', compact('events'));
+        // Format date and time
+        $dateTime = $appraisal->appointment_date . ' ' . $appraisal->appointment_time;
+        
+        // Add to events array
+        $events[] = [
+            'id' => $appraisal->id,
+            'title' => $appraisal->client_name,
+            'start' => $dateTime,
+            'url' => route('admin.appraisals.edit', $appraisal->id),
+            'backgroundColor' => $color,
+            'borderColor' => $color,
+            'extendedProps' => [
+                'status' => $appraisal->status,
+                'address' => $appraisal->property_address,
+                'phone' => $appraisal->client_phone,
+            ]
+        ];
     }
-
+    
+    return view('admin.appraisals.calendar', compact('events'));
+}
     public function create()
 {
     $appraisers = User::where('role', 'appraiser')->get();
