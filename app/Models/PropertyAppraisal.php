@@ -23,22 +23,16 @@ class PropertyAppraisal extends Model
         'property_address',
         'appointment_date',
         'appointment_time',
+        'property_type',
+        'property_area',
+        'bedrooms',
+        'bathrooms',
         'additional_notes',
         'status',
     ];
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'appointment_date' => 'date',
-        'appointment_time' => 'datetime:H:i',
-    ];
-
-    /**
-     * Get the user that owns the appraisal request.
+     * Get the user who booked the appraisal.
      */
     public function user()
     {
@@ -51,5 +45,53 @@ class PropertyAppraisal extends Model
     public function appraiser()
     {
         return $this->belongsTo(User::class, 'appraiser_id');
+    }
+
+    /**
+     * Scope a query to only include pending appraisals.
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Scope a query to only include confirmed appraisals.
+     */
+    public function scopeConfirmed($query)
+    {
+        return $query->where('status', 'confirmed');
+    }
+
+    /**
+     * Scope a query to only include completed appraisals.
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
+
+    /**
+     * Scope a query to only include cancelled appraisals.
+     */
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 'cancelled');
+    }
+
+    /**
+     * Get the formatted appointment date.
+     */
+    public function getFormattedDateAttribute()
+    {
+        return date('F d, Y', strtotime($this->appointment_date));
+    }
+
+    /**
+     * Get the formatted appointment time.
+     */
+    public function getFormattedTimeAttribute()
+    {
+        return date('h:i A', strtotime($this->appointment_time));
     }
 }

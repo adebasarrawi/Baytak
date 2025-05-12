@@ -27,16 +27,6 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 });
 
-Route::get('/a', function () {
-    return view('admin.a.index');
-});
-Route::get('/b', function () {
-    return view('admin.b.index');
-});
-Route::get('/c', function () {
-    return view('admin.c.index');
-});
-
 // Properties routes - using resource controller for standard CRUD operations
 Route::resource('properties', PropertyController::class);
 
@@ -84,7 +74,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         return view('admin.dashboard');
     })->name('dashboard');
     
-    // Appraisal Routes - FIXED: removed nested prefix
+    // Appraisal Routes
     Route::get('/appraisals', [AppraisalController::class, 'index'])->name('appraisals.index');
     Route::get('/appraisals/calendar', [AppraisalController::class, 'calendar'])->name('appraisals.calendar');
     Route::get('/appraisals/create', [AppraisalController::class, 'create'])->name('appraisals.create');
@@ -140,5 +130,10 @@ Route::middleware(['auth'])->group(function () {
 
 // Add this inside your admin routes group
 Route::get('/dashboard-test', function () {
-    return view('admin.dashboard');  // Make sure you created this file as in Solution 2
+    return view('admin.dashboard');
 })->name('dashboard-test');
+
+// إضافة مسار تحويل لصفحة a لتتوافق مع الرابط الموجود في السايدبار
+Route::get('/a', function () {
+    return redirect()->route('admin.appraisals.index');
+});

@@ -15,15 +15,12 @@ class AdminMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle($request, Closure $next)
     {
-        // Check if the user is logged in and is an admin
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && Auth::user()->role !== 'seller')) {
-            // If not, redirect to home with error message
-            return redirect()->route('home')->with('error', 'You do not have permission to access this page.');
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return $next($request);
         }
-
-        // Continue processing the request
-        return $next($request);
+        
+        return redirect('/')->with('error', 'You do not have admin access');
     }
 }

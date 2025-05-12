@@ -1,10 +1,10 @@
 @extends('layouts.admin.app')
 
 @section('content')
-<div class="container">
+<div class="content">
     <div class="page-inner">
         <div class="page-header">
-            <h4 class="page-title">Appointment Calendar</h4>
+            <h4 class="page-title">Appraisal Calendar</h4>
             <ul class="breadcrumbs">
                 <li class="nav-home">
                     <a href="{{ route('admin.dashboard') }}">
@@ -15,7 +15,7 @@
                     <i class="fas fa-angle-right"></i>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.appraisals.index') }}">Appointments</a>
+                    <a href="{{ route('admin.appraisals.index') }}">Appraisals</a>
                 </li>
                 <li class="separator">
                     <i class="fas fa-angle-right"></i>
@@ -31,10 +31,10 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex align-items-center">
-                            <h4 class="card-title">Appointment Calendar</h4>
+                            <h4 class="card-title">Appraisal Schedule</h4>
                             <div class="ml-auto">
-                                <a href="{{ route('admin.appraisals.index') }}" class="btn btn-primary btn-round">
-                                    <i class="fas fa-list mr-2"></i>List View
+                                <a href="{{ route('admin.appraisals.create') }}" class="btn btn-primary btn-round">
+                                    <i class="fas fa-plus mr-2"></i>Add Appointment
                                 </a>
                             </div>
                         </div>
@@ -42,32 +42,31 @@
                     <div class="card-body">
                         <div class="row mb-4">
                             <div class="col-md-3">
-                                <div class="legend-item">
-                                    <span class="legend-color bg-warning"></span>
-                                    <span class="legend-text">Pending</span>
+                                <div class="form-group">
+                                    <label for="calendarFilterStatus">Filter by Status</label>
+                                    <select class="form-control" id="calendarFilterStatus">
+                                        <option value="">All Statuses</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="confirmed">Confirmed</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="legend-item">
-                                    <span class="legend-color bg-success"></span>
-                                    <span class="legend-text">Confirmed</span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="legend-item">
-                                    <span class="legend-color bg-primary"></span>
-                                    <span class="legend-text">Completed</span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="legend-item">
-                                    <span class="legend-color bg-danger"></span>
-                                    <span class="legend-text">Cancelled</span>
+                                <div class="form-group">
+                                    <label for="calendarFilterAppraiser">Filter by Appraiser</label>
+                                    <select class="form-control" id="calendarFilterAppraiser">
+                                        <option value="">All Appraisers</option>
+                                        @foreach($appraisers as $appraiser)
+                                            <option value="{{ $appraiser->id }}">{{ $appraiser->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         
-                        <div id="calendar"></div>
+                        <div id="appraisalCalendar"></div>
                     </div>
                 </div>
             </div>
@@ -75,9 +74,9 @@
     </div>
 </div>
 
-<!-- Appointment Detail Modal -->
-<div class="modal fade" id="appointmentModal" tabindex="-1" role="dialog" aria-labelledby="appointmentModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<!-- Appointment Details Modal -->
+<div class="modal fade" id="appointmentDetailsModal" tabindex="-1" role="dialog" aria-labelledby="appointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="appointmentModalLabel">Appointment Details</h5>
@@ -86,82 +85,112 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="appointment-details">
-                    <p><strong>Client:</strong> <span id="modal-client"></span></p>
-                    <p><strong>Property:</strong> <span id="modal-address"></span></p>
-                    <p><strong>Date & Time:</strong> <span id="modal-datetime"></span></p>
-                    <p><strong>Status:</strong> <span id="modal-status"></span></p>
-                    <p><strong>Phone:</strong> <span id="modal-phone"></span></p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Client Name:</label>
+                            <p id="modalClientName" class="font-weight-bold"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Contact Information:</label>
+                            <p id="modalClientContact" class="mb-0"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Property Address:</label>
+                            <p id="modalPropertyAddress" class="font-weight-bold"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Status:</label>
+                            <p id="modalStatus"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Appointment Date:</label>
+                            <p id="modalDate" class="font-weight-bold"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Appointment Time:</label>
+                            <p id="modalTime" class="font-weight-bold"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Assigned Appraiser:</label>
+                            <p id="modalAppraiser" class="font-weight-bold"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Additional Notes:</label>
+                            <p id="modalNotes"></p>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <a href="#" class="btn btn-primary" id="modal-edit-link">Edit Appointment</a>
+                <div class="button-group">
+                    <a href="#" id="modalEditBtn" class="btn btn-primary">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                    </a>
+                    <button type="button" id="modalConfirmBtn" class="btn btn-success" data-status="confirmed">
+                        <i class="fas fa-check-circle mr-1"></i> Confirm
+                    </button>
+                    <button type="button" id="modalCompleteBtn" class="btn btn-info" data-status="completed">
+                        <i class="fas fa-flag-checkered mr-1"></i> Complete
+                    </button>
+                    <button type="button" id="modalCancelBtn" class="btn btn-danger" data-status="cancelled">
+                        <i class="fas fa-times-circle mr-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Status Update Form -->
+<form id="appointmentStatusForm" method="POST" style="display: none;">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="status" id="statusValue">
+</form>
 @endsection
 
 @push('styles')
-<!-- FullCalendar CSS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css">
 <style>
-    #calendar {
+    #appraisalCalendar {
         height: 700px;
-    }
-    
-    .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    
-    .legend-color {
-        width: 20px;
-        height: 20px;
-        border-radius: 3px;
-        margin-right: 10px;
-    }
-    
-    .legend-text {
-        font-size: 14px;
     }
     
     .fc-event {
         cursor: pointer;
     }
     
-    .fc-event:hover {
-        opacity: 0.9;
+    .fc-daygrid-event {
+        white-space: normal;
     }
     
-    .fc-daygrid-event-dot {
-        display: none;
-    }
-    
-    .fc .fc-button-primary {
-        background-color: #1572e8;
-        border-color: #1572e8;
-    }
-    
-    .fc .fc-button-primary:hover {
-        background-color: #0d60c8;
-        border-color: #0d60c8;
-    }
-    
-    .fc .fc-button-primary:not(:disabled).fc-button-active, 
-    .fc .fc-button-primary:not(:disabled):active {
-        background-color: #0d60c8;
-        border-color: #0d60c8;
-    }
-    
-    .fc-event-time {
+    /* Status colors in modal */
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 4px;
         font-weight: bold;
+        color: white;
     }
     
-    .appointment-details p {
-        margin-bottom: 10px;
+    .status-pending {
+        background-color: #ffc107;
+    }
+    
+    .status-confirmed {
+        background-color: #28a745;
+    }
+    
+    .status-completed {
+        background-color: #0d6efd;
+    }
+    
+    .status-cancelled {
+        background-color: #dc3545;
+        text-decoration: line-through;
     }
 </style>
 @endpush

@@ -330,4 +330,3 @@
     });
 </script>
 @endpush
-endsection

@@ -1,216 +1,186 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\PropertyAppraisal;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\AppointmentStatusUpdated;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 
-class AppraisalController extends Controller
+
+class PropertyAppraisalController extends Controller
 {
     /**
-     * Display a listing of the appraisal appointments.
+     * Display the property estimation page.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index()
     {
-        // Get query parameters for filtering
-        $status = $request->query('status');
-        $date = $request->query('date');
-        $search = $request->query('search');
-        
-        // Build query
-        $query = PropertyAppraisal::query()
-            ->with(['user', 'appraiser'])
-            ->orderBy('appointment_date', 'asc')
-            ->orderBy('appointment_time', 'asc');
-        
-        // Apply filters
-        if ($status) {
-            $query->where('status', $status);
-        }
-        
-        if ($date) {
-            $query->whereDate('appointment_date', $date);
-        }
-        
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('client_name', 'like', "%{$search}%")
-                  ->orWhere('client_email', 'like', "%{$search}%")
-                  ->orWhere('client_phone', 'like', "%{$search}%")
-                  ->orWhere('property_address', 'like', "%{$search}%");
-            });
-        }
-        
-        // Get paginated results
-        $appraisals = $query->paginate(10);
-        
-        // Get counts for each status for the dashboard
-        $statusCounts = [
-            'pending' => PropertyAppraisal::where('status', 'pending')->count(),
-            'confirmed' => PropertyAppraisal::where('status', 'confirmed')->count(),
-            'completed' => PropertyAppraisal::where('status', 'completed')->count(),
-            'cancelled' => PropertyAppraisal::where('status', 'cancelled')->count(),
-        ];
-        
-        return view('admin.appraisals.index', compact('appraisals', 'statusCounts', 'status', 'date', 'search'));
-    }
-    
-    /**
-     * Show the form for editing an appraisal.
-     *
-     * @param  \App\Models\PropertyAppraisal  $appraisal
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(PropertyAppraisal $appraisal)
-    {
-        // Get all appraisers (assuming they are users with a specific role)
+        // Get all appraisers for the booking form
         $appraisers = User::where('role', 'appraiser')->get();
         
-        return view('admin.appraisals.edit', compact('appraisal', 'appraisers'));
-    }
-    
-    /**
-     * Update the specified appraisal status.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\PropertyAppraisal  $appraisal
-     * @return \Illuminate\Http\Response
-     */
-    public function updateStatus(Request $request, PropertyAppraisal $appraisal)
-    {
-        $request->validate([
-            'status' => 'required|in:pending,confirmed,completed,cancelled',
-        ]);
-        
-        $oldStatus = $appraisal->status;
-        $newStatus = $request->status;
-        
-        $appraisal->status = $newStatus;
-        $appraisal->save();
-        
-        // Send notification email to client about status change
-        if ($oldStatus != $newStatus) {
-            try {
-                Mail::to($appraisal->client_email)->send(new AppointmentStatusUpdated($appraisal));
-            } catch (\Exception $e) {
-                // Log error but don't stop the process
-                Log::error('Failed to send appointment status email: ' . $e->getMessage());
-            }
+        // إذا لم يكن هناك أي مخمنين، أضف بعض البيانات الافتراضية للعرض
+        if ($appraisers->isEmpty()) {
+            // إنشاء قائمة افتراضية من المخمنين
+            $defaultAppraisers = [
+                (object)[
+                    'id' => 1,
+                    'name' => 'John Smith',
+                    'profile_image' => null,
+                    'rating' => 4.5,
+                    'specialty' => 'Senior Appraiser',
+                    'bio' => 'Specializes in residential properties with over 15 years of experience in Amman\'s premium neighborhoods.',
+                    'certification' => 'Certified by Jordan Engineers Association'
+                ],
+                (object)[
+                    'id' => 2,
+                    'name' => 'Sarah Johnson',
+                    'profile_image' => null,
+                    'rating' => 4.9,
+                    'specialty' => 'Commercial Expert',
+                    'bio' => 'Expert in commercial properties and investment analysis with international valuation experience.',
+                    'certification' => 'RICS Certified Valuer'
+                ],
+                (object)[
+                    'id' => 3,
+                    'name' => 'Mohammed Al-Abdullah',
+                    'profile_image' => null,
+                    'rating' => 4.2,
+                    'specialty' => 'Land Specialist',
+                    'bio' => 'Specialized in land valuation and development potential assessment across Jordan.',
+                    'certification' => 'Dept. of Lands Certified'
+                ],
+                (object)[
+                    'id' => 4,
+                    'name' => 'Layla Hassan',
+                    'profile_image' => null,
+                    'rating' => 4.6,
+                    'specialty' => 'Luxury Properties',
+                    'bio' => 'Specialized in luxury and high-end property valuations in Amman\'s elite neighborhoods.',
+                    'certification' => 'International Valuation Standards'
+                ],
+            ];
+            
+            $appraisers = collect($defaultAppraisers);
         }
         
-        return redirect()->route('admin.appraisals.index')
-            ->with('success', 'Appointment status updated successfully');
+        return view('public.property-estimation', compact('appraisers'));
     }
     
     /**
-     * Update the specified appraisal in storage.
+     * Book a property appraisal appointment.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\PropertyAppraisal  $appraisal
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, PropertyAppraisal $appraisal)
+    public function bookAppointment(Request $request)
     {
-        $request->validate([
-            'appraiser_id' => 'required|integer',
-            'client_name' => 'required|string|max:255',
-            'client_email' => 'required|email|max:255',
-            'client_phone' => 'required|string|max:20',
-            'property_address' => 'required|string',
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'appraiser_id' => 'required|exists:users,id',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required',
+            'property_address' => 'required|string',
+            'client_name' => 'required|string|max:255',
+            'client_phone' => 'required|string|max:20',
+            'client_email' => 'required|email|max:255',
+            'property_type' => 'nullable|string',
+            'property_area' => 'nullable|numeric',
+            'bedrooms' => 'nullable|integer',
+            'bathrooms' => 'nullable|integer',
             'additional_notes' => 'nullable|string',
-            'status' => 'required|in:pending,confirmed,completed,cancelled',
         ]);
-        
-        $appraisal->update($request->all());
-        
-        return redirect()->route('admin.appraisals.index')
-            ->with('success', 'Appointment updated successfully');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Create the appointment
+            $appraisal = new PropertyAppraisal();
+            $appraisal->user_id = Auth::id(); // Currently logged in user
+            $appraisal->appraiser_id = $request->appraiser_id;
+            $appraisal->client_name = $request->client_name;
+            $appraisal->client_email = $request->client_email;
+            $appraisal->client_phone = $request->client_phone;
+            $appraisal->property_address = $request->property_address;
+            $appraisal->appointment_date = $request->appointment_date;
+            $appraisal->appointment_time = $request->appointment_time;
+            $appraisal->property_type = $request->property_type;
+            $appraisal->property_area = $request->property_area;
+            $appraisal->bedrooms = $request->bedrooms;
+            $appraisal->bathrooms = $request->bathrooms;
+            $appraisal->additional_notes = $request->additional_notes;
+            $appraisal->status = 'pending'; // Default status is pending
+            $appraisal->save();
+
+            // Return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Appointment booked successfully',
+                'appointment' => $appraisal
+            ]);
+        } catch (\Exception $e) {
+            // Log error
+            Log::error('Error booking appointment: ' . $e->getMessage());
+
+            
+            // Return error response
+            return response()->json([
+                'success' => false,
+                'message' => 'Error booking appointment',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
     
     /**
-     * Remove the specified appraisal from storage.
+     * Display the user's appraisal appointments.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function myAppointments()
+    {
+        $appraisals = PropertyAppraisal::where('user_id', Auth::id())
+            ->with('appraiser')
+            ->orderBy('appointment_date', 'desc')
+            ->paginate(10);
+            
+        return view('public.my-appraisals', compact('appraisals'));
+    }
+    
+    /**
+     * Cancel an appointment by the user.
      *
      * @param  \App\Models\PropertyAppraisal  $appraisal
      * @return \Illuminate\Http\Response
      */
-    public function destroy(PropertyAppraisal $appraisal)
+    public function cancelAppointment(PropertyAppraisal $appraisal)
     {
-        $appraisal->delete();
-        
-        return redirect()->route('admin.appraisals.index')
-            ->with('success', 'Appointment deleted successfully');
-    }
-    
-    /**
-     * Show the calendar view of appraisal appointments.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    // In your AppraisalController.php
-public function calendar()
-{
-    // Get all appointments for calendar
-    $appraisals = PropertyAppraisal::all();
-    
-    // Format appointments for fullcalendar
-    $events = [];
-    
-    foreach ($appraisals as $appraisal) {
-        // Determine color based on status
-        $color = '';
-        switch ($appraisal->status) {
-            case 'pending':
-                $color = '#ffc107'; // yellow
-                break;
-            case 'confirmed':
-                $color = '#28a745'; // green
-                break;
-            case 'completed':
-                $color = '#0d6efd'; // blue
-                break;
-            case 'cancelled':
-                $color = '#dc3545'; // red
-                break;
-            default:
-                $color = '#6c757d'; // gray
+        // Check if the user owns this appointment
+        if ($appraisal->user_id !== Auth::id()) {
+            return redirect()->route('property.appraisals.my')
+                ->with('error', 'Unauthorized action.');
         }
         
-        // Format date and time
-        $dateTime = $appraisal->appointment_date . ' ' . $appraisal->appointment_time;
+        // Check if the appointment can be cancelled (not completed)
+        if ($appraisal->status === 'completed') {
+            return redirect()->route('property.appraisals.my')
+                ->with('error', 'Completed appointments cannot be cancelled.');
+        }
         
-        // Add to events array
-        $events[] = [
-            'id' => $appraisal->id,
-            'title' => $appraisal->client_name,
-            'start' => $dateTime,
-            'url' => route('admin.appraisals.edit', $appraisal->id),
-            'backgroundColor' => $color,
-            'borderColor' => $color,
-            'extendedProps' => [
-                'status' => $appraisal->status,
-                'address' => $appraisal->property_address,
-                'phone' => $appraisal->client_phone,
-            ]
-        ];
+        $appraisal->status = 'cancelled';
+        $appraisal->save();
+        
+        return redirect()->route('property.appraisals.my')
+            ->with('success', 'Appointment cancelled successfully.');
     }
-    
-    return view('admin.appraisals.calendar', compact('events'));
-}
-    public function create()
-{
-    $appraisers = User::where('role', 'appraiser')->get();
-    return view('admin.appraisals.create', compact('appraisers'));
-}
 }

@@ -287,113 +287,46 @@
                       
                       <div class="appraiser-selection mb-4">
                         <div class="row g-3">
+                          @foreach($appraisers as $appraiser)
                           <div class="col-md-6">
                             <div class="card h-100 appraiser-card">
-                              <input type="radio" name="appraiser" id="appraiser1" value="1" class="d-none appraiser-radio">
-                              <label for="appraiser1" class="card-body d-flex flex-column h-100 cursor-pointer">
+                              <input type="radio" name="appraiser_id" id="appraiser{{ $appraiser->id }}" value="{{ $appraiser->id }}" class="d-none appraiser-radio">
+                              <label for="appraiser{{ $appraiser->id }}" class="card-body d-flex flex-column h-100 cursor-pointer">
                                 <div class="d-flex align-items-center mb-3">
-                                  <img src="{{ asset('images/appraiser1.jpg') }}" alt="John Smith" class="rounded-circle me-3" width="60" height="60">
+                                  <img src="{{ $appraiser->profile_image ? asset($appraiser->profile_image) : asset('images/default-avatar.jpg') }}" alt="{{ $appraiser->name }}" class="rounded-circle me-3" width="60" height="60">
                                   <div>
-                                    <h5 class="card-title mb-0">John Smith</h5>
+                                    <h5 class="card-title mb-0">{{ $appraiser->name }}</h5>
                                     <div class="text-warning mb-1">
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star-half-alt"></i>
-                                      <span class="text-muted ms-1">(4.5)</span>
+                                      @for($i = 1; $i <= 5; $i++)
+                                        @if($i <= $appraiser->rating)
+                                          <i class="fas fa-star"></i>
+                                        @elseif($i - 0.5 <= $appraiser->rating)
+                                          <i class="fas fa-star-half-alt"></i>
+                                        @else
+                                          <i class="far fa-star"></i>
+                                        @endif
+                                      @endfor
+                                      <span class="text-muted ms-1">({{ $appraiser->rating ?? '4.5' }})</span>
                                     </div>
-                                    <span class="badge bg-primary">Senior Appraiser</span>
+                                    <span class="badge bg-primary">{{ $appraiser->specialty ?? 'Professional Appraiser' }}</span>
                                   </div>
                                 </div>
-                                <p class="card-text flex-grow-1">Specializes in residential properties with over 15 years of experience in Amman's premium neighborhoods.</p>
+                                <p class="card-text flex-grow-1">{{ $appraiser->bio ?? 'Experienced property appraiser specializing in residential and commercial properties.' }}</p>
                                 <div class="text-muted small">
-                                  <i class="fas fa-certificate text-success me-1"></i> Certified by Jordan Engineers Association
+                                  <i class="fas fa-certificate text-success me-1"></i> {{ $appraiser->certification ?? 'Certified Appraiser' }}
                                 </div>
                               </label>
                             </div>
                           </div>
-                          
-                          <div class="col-md-6">
-                            <div class="card h-100 appraiser-card">
-                              <input type="radio" name="appraiser" id="appraiser2" value="2" class="d-none appraiser-radio">
-                              <label for="appraiser2" class="card-body d-flex flex-column h-100 cursor-pointer">
-                                <div class="d-flex align-items-center mb-3">
-                                  <img src="{{ asset('images/appraiser2.jpg') }}" alt="Sarah Johnson" class="rounded-circle me-3" width="60" height="60">
-                                  <div>
-                                    <h5 class="card-title mb-0">Sarah Johnson</h5>
-                                    <div class="text-warning mb-1">
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <span class="text-muted ms-1">(4.9)</span>
-                                    </div>
-                                    <span class="badge bg-primary">Commercial Expert</span>
-                                  </div>
-                                </div>
-                                <p class="card-text flex-grow-1">Expert in commercial properties and investment analysis with international valuation experience.</p>
-                                <div class="text-muted small">
-                                  <i class="fas fa-certificate text-success me-1"></i> RICS Certified Valuer
-                                </div>
-                              </label>
+                          @endforeach
+
+                          @if(count($appraisers) == 0)
+                          <div class="col-12 text-center py-4">
+                            <div class="alert alert-info">
+                              <i class="fas fa-info-circle me-2"></i> No appraisers are currently available. Please contact us for more information.
                             </div>
                           </div>
-                          
-                          <div class="col-md-6">
-                            <div class="card h-100 appraiser-card">
-                              <input type="radio" name="appraiser" id="appraiser3" value="3" class="d-none appraiser-radio">
-                              <label for="appraiser3" class="card-body d-flex flex-column h-100 cursor-pointer">
-                                <div class="d-flex align-items-center mb-3">
-                                  <img src="{{ asset('images/appraiser3.jpg') }}" alt="Mohammed Al-Abdullah" class="rounded-circle me-3" width="60" height="60">
-                                  <div>
-                                    <h5 class="card-title mb-0">Mohammed Al-Abdullah</h5>
-                                    <div class="text-warning mb-1">
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="far fa-star"></i>
-                                      <span class="text-muted ms-1">(4.2)</span>
-                                    </div>
-                                    <span class="badge bg-primary">Land Specialist</span>
-                                  </div>
-                                </div>
-                                <p class="card-text flex-grow-1">Specialized in land valuation and development potential assessment across Jordan.</p>
-                                <div class="text-muted small">
-                                  <i class="fas fa-certificate text-success me-1"></i> Dept. of Lands Certified
-                                </div>
-                              </label>
-                            </div>
-                          </div>
-                          
-                          <div class="col-md-6">
-                            <div class="card h-100 appraiser-card">
-                              <input type="radio" name="appraiser" id="appraiser4" value="4" class="d-none appraiser-radio">
-                              <label for="appraiser4" class="card-body d-flex flex-column h-100 cursor-pointer">
-                                <div class="d-flex align-items-center mb-3">
-                                  <img src="{{ asset('images/appraiser4.jpg') }}" alt="Layla Hassan" class="rounded-circle me-3" width="60" height="60">
-                                  <div>
-                                    <h5 class="card-title mb-0">Layla Hassan</h5>
-                                    <div class="text-warning mb-1">
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star"></i>
-                                      <i class="fas fa-star-half-alt"></i>
-                                      <span class="text-muted ms-1">(4.6)</span>
-                                    </div>
-                                    <span class="badge bg-primary">Luxury Properties</span>
-                                  </div>
-                                </div>
-                                <p class="card-text flex-grow-1">Specialized in luxury and high-end property valuations in Amman's elite neighborhoods.</p>
-                                <div class="text-muted small">
-                                  <i class="fas fa-certificate text-success me-1"></i> International Valuation Standards
-                                </div>
-                              </label>
-                            </div>
-                          </div>
+                          @endif
                         </div>
                       </div>
                     </div>
@@ -403,13 +336,13 @@
                       
                       <div class="row g-3">
                         <div class="col-md-6 mb-3">
-                          <label for="appointmentDate" class="form-label">Preferred Date</label>
-                          <input type="date" class="form-control" id="appointmentDate" min="{{ date('Y-m-d') }}" required>
+                          <label for="appointment_date" class="form-label">Preferred Date</label>
+                          <input type="date" class="form-control" id="appointment_date" name="appointment_date" min="{{ date('Y-m-d') }}" required>
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                          <label for="appointmentTime" class="form-label">Preferred Time</label>
-                          <select class="form-select" id="appointmentTime" required>
+                          <label for="appointment_time" class="form-label">Preferred Time</label>
+                          <select class="form-select" id="appointment_time" name="appointment_time" required>
                             <option value="">Choose...</option>
                             <optgroup label="Morning">
                               <option value="09:00">9:00 AM</option>
@@ -427,28 +360,34 @@
                         </div>
                         
                         <div class="col-md-12 mb-3">
-                          <label for="propertyAddress" class="form-label">Property Address</label>
-                          <textarea class="form-control" id="propertyAddress" rows="3" required></textarea>
+                          <label for="property_address" class="form-label">Property Address</label>
+                          <textarea class="form-control" id="property_address" name="property_address" rows="3" required></textarea>
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                          <label for="contactName" class="form-label">Your Name</label>
-                          <input type="text" class="form-control" id="contactName" value="{{ Auth::user()->name }}" required>
+                          <label for="client_name" class="form-label">Your Name</label>
+                          <input type="text" class="form-control" id="client_name" name="client_name" value="{{ Auth::user()->name }}" required>
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                          <label for="contactPhone" class="form-label">Phone Number</label>
-                          <input type="tel" class="form-control" id="contactPhone" value="{{ Auth::user()->phone ?? '' }}" required>
+                          <label for="client_phone" class="form-label">Phone Number</label>
+                          <input type="tel" class="form-control" id="client_phone" name="client_phone" value="{{ Auth::user()->phone ?? '' }}" required>
                         </div>
                         
                         <div class="col-md-12 mb-3">
-                          <label for="contactEmail" class="form-label">Email</label>
-                          <input type="email" class="form-control" id="contactEmail" value="{{ Auth::user()->email }}" required>
+                          <label for="client_email" class="form-label">Email</label>
+                          <input type="email" class="form-control" id="client_email" name="client_email" value="{{ Auth::user()->email }}" required>
                         </div>
                         
+                        <!-- Hidden fields for property details from the instant estimate -->
+                        <input type="hidden" id="property_type" name="property_type" value="">
+                        <input type="hidden" id="property_area" name="property_area" value="">
+                        <input type="hidden" id="bedrooms_count" name="bedrooms" value="">
+                        <input type="hidden" id="bathrooms_count" name="bathrooms" value="">
+                        
                         <div class="col-md-12 mb-3">
-                          <label for="additionalNotes" class="form-label">Additional Notes (Optional)</label>
-                          <textarea class="form-control" id="additionalNotes" rows="3"></textarea>
+                          <label for="additional_notes" class="form-label">Additional Notes (Optional)</label>
+                          <textarea class="form-control" id="additional_notes" name="additional_notes" rows="3"></textarea>
                         </div>
                       </div>
                     </div>
@@ -802,6 +741,18 @@
     bookAppraiserBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         document.getElementById('booking-tab').click();
+        
+        // Transfer values from estimation to booking form
+        const propertyType = document.getElementById('propertyType').value;
+        const area = document.getElementById('area').value;
+        const bedrooms = document.getElementById('bedrooms').value;
+        const bathrooms = document.getElementById('bathrooms').value;
+        
+        // Set hidden fields
+        document.getElementById('property_type').value = propertyType;
+        document.getElementById('property_area').value = area;
+        document.getElementById('bedrooms_count').value = bedrooms;
+        document.getElementById('bathrooms_count').value = bathrooms;
       });
     });
     
@@ -901,61 +852,109 @@
     });
     
     // Book appointment
-    bookAppointmentBtn.addEventListener('click', function() {
-      // Get form values
-      const appraiserRadios = document.querySelectorAll('input[name="appraiser"]');
-      let selectedAppraiser = null;
-      let appraiserName = '';
-      
-      for (const radio of appraiserRadios) {
-        if (radio.checked) {
-          selectedAppraiser = radio.value;
-          appraiserName = radio.closest('.appraiser-card').querySelector('.card-title').textContent;
-          break;
+    if (bookAppointmentBtn) {
+      bookAppointmentBtn.addEventListener('click', function() {
+        // Get form values
+        const appraiserRadios = document.querySelectorAll('input[name="appraiser_id"]');
+        let selectedAppraiser = null;
+        let appraiserName = '';
+        
+        for (const radio of appraiserRadios) {
+          if (radio.checked) {
+            selectedAppraiser = radio.value;
+            appraiserName = radio.closest('.appraiser-card').querySelector('.card-title').textContent;
+            break;
+          }
         }
-      }
-      
-      const appointmentDate = document.getElementById('appointmentDate').value;
-      const appointmentTime = document.getElementById('appointmentTime').value;
-      const propertyAddress = document.getElementById('propertyAddress').value;
-      const contactName = document.getElementById('contactName').value;
-      const contactPhone = document.getElementById('contactPhone').value;
-      const contactEmail = document.getElementById('contactEmail').value;
-      
-      // Simple validation
-      if (!selectedAppraiser || !appointmentDate || !appointmentTime || !propertyAddress || !contactName || !contactPhone || !contactEmail) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-      
-      // Format date and time
-      const formattedDate = new Date(appointmentDate);
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const formattedDateTime = `${formattedDate.toLocaleDateString('en-US', options)} at ${formatTime(appointmentTime)}`;
-      
-      // Update confirmation
-      confirmedAppraiser.textContent = appraiserName;
-      confirmedDateTime.textContent = formattedDateTime;
-      confirmedAddress.textContent = propertyAddress;
-      
-      // Show confirmation
-      bookingConfirmation.classList.remove('d-none');
-      
-      // Scroll to confirmation
-      bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
-      
-      // In a real application, you would send this data to the server
-      console.log({
-        appraiser: selectedAppraiser,
-        date: appointmentDate,
-        time: appointmentTime,
-        address: propertyAddress,
-        name: contactName,
-        phone: contactPhone,
-        email: contactEmail,
-        notes: document.getElementById('additionalNotes').value
+        
+        const appointmentDate = document.getElementById('appointment_date').value;
+        const appointmentTime = document.getElementById('appointment_time').value;
+        const propertyAddress = document.getElementById('property_address').value;
+        const clientName = document.getElementById('client_name').value;
+        const clientPhone = document.getElementById('client_phone').value;
+        const clientEmail = document.getElementById('client_email').value;
+        const additionalNotes = document.getElementById('additional_notes').value;
+        
+        // Get hidden property details
+        const propertyType = document.getElementById('property_type').value;
+        const propertyArea = document.getElementById('property_area').value;
+        const bedrooms = document.getElementById('bedrooms_count').value;
+        const bathrooms = document.getElementById('bathrooms_count').value;
+        
+        // Simple validation
+        if (!selectedAppraiser || !appointmentDate || !appointmentTime || !propertyAddress || !clientName || !clientPhone || !clientEmail) {
+          alert('Please fill in all required fields.');
+          return;
+        }
+        
+        // Show loading state
+        bookAppointmentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
+        bookAppointmentBtn.disabled = true;
+        
+        // Prepare form data
+        const formData = {
+          _token: document.querySelector('input[name="_token"]').value,
+          appraiser_id: selectedAppraiser,
+          appointment_date: appointmentDate,
+          appointment_time: appointmentTime,
+          property_address: propertyAddress,
+          client_name: clientName,
+          client_phone: clientPhone,
+          client_email: clientEmail,
+          property_type: propertyType,
+          property_area: propertyArea,
+          bedrooms: bedrooms,
+          bathrooms: bathrooms,
+          additional_notes: additionalNotes
+        };
+        
+        // Send AJAX request to book appointment
+        fetch('{{ route("property.appraisal.book") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Format date and time
+            const formattedDate = new Date(appointmentDate);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDateTime = `${formattedDate.toLocaleDateString('en-US', options)} at ${formatTime(appointmentTime)}`;
+            
+            // Update confirmation
+            confirmedAppraiser.textContent = appraiserName;
+            confirmedDateTime.textContent = formattedDateTime;
+            confirmedAddress.textContent = propertyAddress;
+            
+            // Show confirmation
+            bookingConfirmation.classList.remove('d-none');
+            
+            // Scroll to confirmation
+            bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
+            
+            // Reset form
+            document.getElementById('bookingForm').reset();
+          } else {
+            // Show error message
+            alert('There was an error booking your appointment. Please try again.');
+            console.error(data.errors || data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('There was an error booking your appointment. Please try again.');
+        })
+        .finally(() => {
+          // Reset button state
+          bookAppointmentBtn.innerHTML = '<i class="fas fa-calendar-check me-2"></i> Book Appointment';
+          bookAppointmentBtn.disabled = false;
+        });
       });
-    });
+    }
     
     // Helper function to format time
     function formatTime(timeString) {
