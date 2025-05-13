@@ -22,8 +22,8 @@
 <div class="section">
   <div class="container">
     <div class="row">
-      <!-- Sidebar -->
-      <div class="col-lg-3 mb-5 mb-lg-0">
+     <!-- Sidebar -->
+     <div class="col-lg-3 mb-5 mb-lg-0">
         <div class="profile-sidebar shadow rounded bg-white p-4">
           <div class="text-center mb-4">
             @if(Auth::user()->profile_image)
@@ -51,11 +51,14 @@
               </a>
             @endif
             <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action active">
-  <i class="fas fa-heart me-2"></i> Favorites
-</a>
-<a href="{{ route('notifications.index') }}" class="list-group-item list-group-item-action">
-  <i class="fas fa-bell me-2"></i> Notifications
-</a>
+              <i class="fas fa-heart me-2"></i> Favorites
+            </a>
+            <a href="{{ url('/my-appraisals') }}" class="list-group-item list-group-item-action ">
+              <i class="fas fa-calendar-check me-2"></i> My Appointments
+            </a>
+            <a href="{{ route('notifications.index') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-bell me-2"></i> Notifications
+            </a>
             <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action text-danger">
               <i class="fas fa-sign-out-alt me-2"></i> Logout
             </a>

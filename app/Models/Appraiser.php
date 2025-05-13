@@ -19,6 +19,9 @@ class Appraiser extends Model
         'rating'
     ];
 
+    /**
+     * Get the user associated with the appraiser.
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

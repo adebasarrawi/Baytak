@@ -3,7 +3,7 @@
 @section('title', 'Estimate Your Property')
 
 @section('content')
-<div class="hero page-inner overlay" >
+<div class="hero page-inner overlay">
   <div class="container">
     <div class="row justify-content-center align-items-center">
       <div class="col-lg-9 text-center mt-5">
@@ -30,7 +30,7 @@
     <div class="row">
       <div class="col-12">
         <div class="property-estimation-tabs">
-          <ul class="nav nav-tabs nav-fill" id="estimationTab" role="tablist">
+          <ul class="nav nav-tabs nav-fill mb-0" id="estimationTab" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="estimate-tab" data-bs-toggle="tab" data-bs-target="#estimate-tab-pane" type="button" role="tab" aria-controls="estimate-tab-pane" aria-selected="true">
                 <i class="fas fa-calculator me-2"></i> Instant Estimate
@@ -186,7 +186,7 @@
                     </div>
                     
                     <div class="text-center mt-4">
-                      <button type="button" id="calculateEstimateBtn" class="btn btn-primary btn-lg px-5">
+                      <button type="button" id="calculateEstimateBtn" class="btn btn-primary btn-lg px-5 py-2">
                         <i class="fas fa-calculator me-2"></i> Calculate Estimate
                       </button>
                     </div>
@@ -287,46 +287,48 @@
                       
                       <div class="appraiser-selection mb-4">
                         <div class="row g-3">
-                          @foreach($appraisers as $appraiser)
-                          <div class="col-md-6">
-                            <div class="card h-100 appraiser-card">
-                              <input type="radio" name="appraiser_id" id="appraiser{{ $appraiser->id }}" value="{{ $appraiser->id }}" class="d-none appraiser-radio">
+                          @forelse($appraisers as $appraiser)
+                          <div class="col-md-6 mb-3">
+                            <div class="card appraiser-card h-100">
+                              <input type="radio" name="appraiser_id" id="appraiser{{ $appraiser->id }}" 
+                                     value="{{ $appraiser->id }}" class="d-none appraiser-radio">
                               <label for="appraiser{{ $appraiser->id }}" class="card-body d-flex flex-column h-100 cursor-pointer">
                                 <div class="d-flex align-items-center mb-3">
-                                  <img src="{{ $appraiser->profile_image ? asset($appraiser->profile_image) : asset('images/default-avatar.jpg') }}" alt="{{ $appraiser->name }}" class="rounded-circle me-3" width="60" height="60">
+                                  <img src="{{ $appraiser->profile_image ?? asset('images/default-avatar.jpg') }}" 
+                                       alt="{{ $appraiser->name }}" class="rounded-circle me-3" width="60" height="60">
                                   <div>
                                     <h5 class="card-title mb-0">{{ $appraiser->name }}</h5>
                                     <div class="text-warning mb-1">
                                       @for($i = 1; $i <= 5; $i++)
-                                        @if($i <= $appraiser->rating)
+                                        @if($i <= floor($appraiser->rating))
                                           <i class="fas fa-star"></i>
-                                        @elseif($i - 0.5 <= $appraiser->rating)
+                                        @elseif($i - 0.5 <= $appraiser->rating))
                                           <i class="fas fa-star-half-alt"></i>
                                         @else
                                           <i class="far fa-star"></i>
                                         @endif
                                       @endfor
-                                      <span class="text-muted ms-1">({{ $appraiser->rating ?? '4.5' }})</span>
+                                      <span class="text-muted ms-1">({{ number_format($appraiser->rating, 1) }})</span>
                                     </div>
-                                    <span class="badge bg-primary">{{ $appraiser->specialty ?? 'Professional Appraiser' }}</span>
+                                    <span class="badge d-inline-block  bg-primary">{{ $appraiser->specialty }}</span>
                                   </div>
                                 </div>
-                                <p class="card-text flex-grow-1">{{ $appraiser->bio ?? 'Experienced property appraiser specializing in residential and commercial properties.' }}</p>
+                                <p class="card-text  bio flex-grow-1 ">{{ $appraiser->bio }}</p>
                                 <div class="text-muted small">
-                                  <i class="fas fa-certificate text-success me-1"></i> {{ $appraiser->certification ?? 'Certified Appraiser' }}
+                                  <i class="fas fa-certificate text-success me-1"></i> 
+                                  {{ $appraiser->certification }}
                                 </div>
                               </label>
                             </div>
                           </div>
-                          @endforeach
-
-                          @if(count($appraisers) == 0)
+                          @empty
                           <div class="col-12 text-center py-4">
                             <div class="alert alert-info">
-                              <i class="fas fa-info-circle me-2"></i> No appraisers are currently available. Please contact us for more information.
+                              <i class="fas fa-info-circle me-2"></i> 
+                              No appraisers currently available. Please contact us for more information.
                             </div>
                           </div>
-                          @endif
+                          @endforelse
                         </div>
                       </div>
                     </div>
@@ -393,7 +395,7 @@
                     </div>
                     
                     <div class="text-center mt-4">
-                      <button type="button" id="bookAppointmentBtn" class="btn btn-primary btn-lg px-5">
+                      <button type="button" id="bookAppointmentBtn" class="btn btn-primary btn-lg px-5 py-3">
                         <i class="fas fa-calendar-check me-2"></i> Book Appointment
                       </button>
                     </div>
@@ -459,7 +461,7 @@
                       </div>
                       
                       <div class="text-center mt-3">
-                        <a href="{{ route('property.appraisals.my') }}" class="btn btn-primary">
+                        <a href="{{ url('/my-appraisals') }}" class="btn btn-primary">
                           <i class="fas fa-calendar me-2"></i> View My Appointments
                         </a>
                       </div>
@@ -968,34 +970,100 @@
 
 @push('styles')
 <style>
-  .cursor-pointer {
-    cursor: pointer;
+
+.card-body {
+  position: relative;
+  overflow: hidden;
+}
+  /* Appraiser Cards Layout */
+  .card-text-p.badge {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+ 
+  .appraiser-selection .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+  
+  .appraiser-selection .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding-right: 15px;
+    padding-left: 15px;
   }
   
   .appraiser-card {
-    transition: all 0.2s ease;
-    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    height: 100%;
   }
   
   .appraiser-card:hover {
-    border-color: var(--bs-primary) !important;
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(148, 27, 27, 0.1);
+    border-color: #0d6efd;
   }
   
-  .book-appraiser-btn {
+  .appraiser-card label {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     cursor: pointer;
+    padding: 20px;
   }
   
+  /* Tabs Styling */
   .property-estimation-tabs .nav-link {
-    color: #495057;
     font-weight: 600;
-    padding: 1rem 1.5rem;
+    padding: 12px 20px;
+    color: #495057;
+    border-radius: 0;
   }
   
   .property-estimation-tabs .nav-link.active {
-    color: var(--bs-primary);
-    border-color: #dee2e6 #dee2e6 #fff;
+    color: #0d6efd;
+    background-color: white;
+    border-bottom-color: white;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .appraiser-selection .col-md-6 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+    
+    .property-estimation-tabs .nav-link {
+      padding: 10px 15px;
+      font-size: 14px;
+    }
+  }
+  
+  /* General Improvements */
+  .tab-content {
+    background: white;
+  }
+  
+  .bg-light {
+    background-color: #f8f9fa!important;
+  }
+  
+  .text-primary {
+    color: #0d6efd!important;
+  }
+  
+  .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
   }
 </style>
 @endpush

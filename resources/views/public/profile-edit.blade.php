@@ -23,8 +23,8 @@
 <div class="section">
   <div class="container">
     <div class="row">
-      <!-- Sidebar -->
-      <div class="col-lg-3 mb-5 mb-lg-0">
+    <!-- Sidebar -->
+    <div class="col-lg-3 mb-5 mb-lg-0">
         <div class="profile-sidebar shadow rounded bg-white p-4">
           <div class="text-center mb-4">
             @if(Auth::user()->profile_image)
@@ -40,7 +40,7 @@
           </div>
           
           <div class="list-group">
-          <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
+            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-user me-2"></i> Account Information
             </a>
             <a href="{{ route('profile.edit') }}" class="list-group-item list-group-item-action active">
@@ -53,6 +53,9 @@
             @endif
             <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-heart me-2"></i> Favorites
+            </a>
+            <a href="{{ url('/my-appraisals') }}" class="list-group-item list-group-item-action ">
+              <i class="fas fa-calendar-check me-2"></i> My Appointments
             </a>
             <a href="{{ route('notifications.index') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-bell me-2"></i> Notifications

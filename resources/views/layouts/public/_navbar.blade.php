@@ -33,7 +33,7 @@
                   <li><a href="{{ url('/properties/my') }}">My Properties</a></li>
                 @endif
                 <li><a href="{{ url('/favorites') }}">Favorites</a></li>
-                <li><a href="{{ url('/property-appraisals/my') }}">My Appraisals</a></li>
+                <li><a href="{{ url('/my-appraisals') }}">My Appraisals</a></li>
                 <li>
                   <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     Logout

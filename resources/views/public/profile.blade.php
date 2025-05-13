@@ -26,14 +26,14 @@
       <div class="col-lg-3 mb-5 mb-lg-0">
         <div class="profile-sidebar shadow rounded bg-white p-4">
           <div class="text-center mb-4">
-            @if($user->profile_image)
-              <img src="{{ asset('storage/'.$user->profile_image) }}" alt="{{ $user->name }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+            @if(Auth::user()->profile_image)
+              <img src="{{ asset('storage/'.Auth::user()->profile_image) }}" alt="{{ Auth::user()->name }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
             @else
-              <img src="{{ asset('images/default-avatar.jpg') }}" alt="{{ $user->name }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+              <img src="{{ asset('images/default-avatar.jpg') }}" alt="{{ Auth::user()->name }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
             @endif
-            <h4>{{ $user->name }}</h4>
-            <p class="text-muted small">{{ $user->email }}</p>
-            @if($user->user_type === 'seller')
+            <h4>{{ Auth::user()->name }}</h4>
+            <p class="text-muted small">{{ Auth::user()->email }}</p>
+            @if(Auth::user()->user_type === 'seller')
               <div class="badge bg-primary py-2 px-3 mb-2">Seller Account</div>
             @endif
           </div>
@@ -45,8 +45,7 @@
             <a href="{{ route('profile.edit') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-edit me-2"></i> Edit Profile
             </a>
-            <!-- Only show the My Properties link for sellers -->
-            @if($user->user_type === 'seller')
+            @if(Auth::user()->user_type === 'seller')
               <a href="{{ route('properties.my') }}" class="list-group-item list-group-item-action">
                 <i class="fas fa-home me-2"></i> My Properties
               </a>
@@ -54,20 +53,22 @@
             <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-heart me-2"></i> Favorites
             </a>
-            <a href="{{ route('logout') }}" 
-   onclick="event.preventDefault(); 
-            document.getElementById('logout-form').submit();" 
-   class="list-group-item list-group-item-action text-danger">
-  <i class="fas fa-sign-out-alt me-2"></i> Logout
-</a>
-
-<form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-  @csrf
-</form>
+            <a href="{{ url('/my-appraisals') }}" class="list-group-item list-group-item-action ">
+              <i class="fas fa-calendar-check me-2"></i> My Appointments
+            </a>
+            <a href="{{ route('notifications.index') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-bell me-2"></i> Notifications
+            </a>
+            <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action text-danger">
+              <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+            
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+              @csrf
+            </form>
           </div>
         </div>
       </div>
-      
       <!-- Main Content -->
       <div class="col-lg-9">
         @if(session('success'))

@@ -43,7 +43,6 @@ Route::get('/contact', function () {
 });
 
 
-// Property Estimation and Appraisal Routes
 Route::get('/property-estimation', [PropertyAppraisalController::class, 'index'])
      ->name('property.estimation');
 Route::post('/property-appraisal/book', [PropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
@@ -54,8 +53,6 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/property-appraisal/{appraisal}/cancel', [PropertyAppraisalController::class, 'cancelAppointment'])->name('property.appraisal.cancel');
 });
 
-// Property Appraisal Route - Keep this for the booking
-Route::post('/property-appraisal/book', [PropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
 
 // Property Image Routes
 Route::get('/properties/{property}/images', [PropertyImageController::class, 'manage'])->name('properties.images.manage');
@@ -73,10 +70,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
 
-// Protected appraisal routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/my-appraisals', [PropertyAppraisalController::class, 'myAppointments'])->name('property.appraisals.my');
-});
 
 // Admin routes for property appraisal management
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

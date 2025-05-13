@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PropertyAppraisal;
+use App\Models\Appraiser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PropertyAppraisalController extends Controller
 {
@@ -26,7 +28,39 @@ class PropertyAppraisalController extends Controller
      */
     public function index()
     {
-        return view('public.property-estimation');
+        // سجّل بداية العملية
+        Log::info('بدء استدعاء صفحة تقدير العقارات');
+        
+        // إنشاء مجموعة فارغة كقيمة افتراضية
+        $appraisers = collect([]);
+        
+        // محاولة جلب المخمنين من قاعدة البيانات
+        try {
+            $appraisers = Appraiser::with('user')->get();
+            
+            // تسجيل عدد المخمنين الذي تم جلبهم
+            Log::info('تم جلب المخمنين بنجاح', ['عدد' => $appraisers->count()]);
+            
+            // تحويل البيانات إلى الشكل المطلوب
+            $appraisers = $appraisers->map(function($appraiser) {
+                return (object)[
+                    'id' => $appraiser->id,
+                    'name' => $appraiser->user->name ?? 'غير معروف',
+                    'profile_image' => $appraiser->user->profile_image ?? null,
+                    'rating' => $appraiser->rating ?? 0,
+                    'specialty' => $appraiser->specialty ?? '',
+                    'bio' => $appraiser->user->bio ?? 'مخمن عقارات محترف',
+                    'certification' => $appraiser->license_number ?? ''
+                ];
+            });
+        } catch (\Exception $e) {
+            // تسجيل الخطأ واستخدام بيانات نموذجية
+            Log::error('خطأ في جلب المخمنين: ' . $e->getMessage());
+            $appraisers = $this->getSampleAppraisers();
+        }
+        
+        // تمرير متغير المخمنين إلى العرض
+        return view('public.property-estimation', compact('appraisers'));
     }
 
     /**
@@ -50,7 +84,7 @@ class PropertyAppraisalController extends Controller
 
         // Add user_id if authenticated (should always be the case due to middleware)
         $validated['user_id'] = Auth::id();
-        
+         
         // Set initial status
         $validated['status'] = 'pending';
 
@@ -76,10 +110,73 @@ class PropertyAppraisalController extends Controller
      */
     public function myAppointments()
     {
-        $appointments = PropertyAppraisal::where('user_id', Auth::id())
+        // جلب جميع المواعيد الخاصة بالمستخدم الحالي
+        $appraisals = PropertyAppraisal::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // إضافة التصفح للعرض
+    
+        // تمرير متغير $appraisals إلى العرض (بدلاً من $appointments)
+        return view('public.my-appointments', compact('appraisals'));
+    }
 
-        return view('appraisals.my-appointments', compact('appointments'));
+    public function cancelAppointment(PropertyAppraisal $appraisal)
+{
+    // تأكد من أن المستخدم الحالي هو صاحب الموعد
+    if (Auth::id() !== $appraisal->user_id) {
+        return redirect()->back()->with('error', 'غير مصرح لك بإلغاء هذا الموعد.');
+    }
+
+    // تغيير حالة الموعد إلى ملغي
+    $appraisal->status = 'cancelled';
+    $appraisal->save();
+
+    return redirect()->route('public.my-appointments')->with('success', 'تم إلغاء الموعد بنجاح.');
+}
+
+    /**
+     * جلب بيانات نموذجية للمخمنين
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    protected function getSampleAppraisers()
+    {
+        return collect([
+            (object)[
+                'id' => 1,
+                'name' => 'أحمد خبير',
+                'profile_image' => null,
+                'rating' => 4.8,
+                'specialty' => 'تقييم الشقق السكنية',
+                'bio' => 'مخمن عقارات مرخص بخبرة 10 سنوات في السوق الأردني',
+                'certification' => 'LIC-1234'
+            ],
+            (object)[
+                'id' => 2,
+                'name' => 'سارة مهندس',
+                'profile_image' => null,
+                'rating' => 4.7,
+                'specialty' => 'تقييم الفلل والقصور',
+                'bio' => 'مهندسة معمارية ومخمنة عقارات متخصصة في الفلل والقصور',
+                'certification' => 'LIC-5678'
+            ],
+            (object)[
+                'id' => 3,
+                'name' => 'محمد عقاري',
+                'profile_image' => null,
+                'rating' => 4.9,
+                'specialty' => 'تقييم الأراضي والمشاريع التجارية',
+                'bio' => 'خبير تقييم الأراضي والمشاريع التجارية بخبرة تزيد عن 12 عامًا',
+                'certification' => 'LIC-9012'
+            ],
+            (object)[
+                'id' => 4,
+                'name' => 'ليلى خبيرة',
+                'profile_image' => null,
+                'rating' => 4.6,
+                'specialty' => 'تقييم الشقق الاستثمارية والمجمعات السكنية',
+                'bio' => 'مخمنة عقارات متخصصة في الشقق الاستثمارية والمجمعات السكنية',
+                'certification' => 'LIC-3456'
+            ]
+        ]);
     }
 }

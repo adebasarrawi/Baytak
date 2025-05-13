@@ -1,4 +1,4 @@
-```php
+
 @extends('layouts.public.app')
 
 @section('title', 'My Appraisal Appointments')
@@ -55,7 +55,7 @@
             <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-heart me-2"></i> Favorites
             </a>
-            <a href="{{ route('property.appraisals.my') }}" class="list-group-item list-group-item-action active">
+            <a href="{{ url('/my-appraisals') }}" class="list-group-item list-group-item-action active">
               <i class="fas fa-calendar-check me-2"></i> My Appointments
             </a>
             <a href="{{ route('notifications.index') }}" class="list-group-item list-group-item-action">
