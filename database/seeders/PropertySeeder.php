@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\Property;
 use Carbon\Carbon;
 
 class PropertySeeder extends Seeder
@@ -513,6 +515,14 @@ class PropertySeeder extends Seeder
             ]
         ];
 
-        DB::table('properties')->insert($properties);
-    }
+    
+
+        foreach ($properties as $propertyData) {
+            Property::updateOrCreate(
+                ['slug' => $propertyData['slug']], // استخدام slug كمفتاح فريد
+                $propertyData
+            );
+        }
+    
+}
 }

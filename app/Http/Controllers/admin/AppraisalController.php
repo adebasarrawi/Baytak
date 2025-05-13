@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\PropertyAppraisal;
-use App\Models\User;
+use App\Models\Appraiser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-
-
 
 class PropertyAppraisalController extends Controller
 {
@@ -20,52 +18,31 @@ class PropertyAppraisalController extends Controller
      */
     public function index()
     {
-        // Get all appraisers for the booking form
-        $appraisers = User::where('role', 'appraiser')->get();
+        // Get all appraisers from appraisers table
+        $appraisers = Appraiser::all();
         
-        // إذا لم يكن هناك أي مخمنين، أضف بعض البيانات الافتراضية للعرض
+        // If no appraisers exist, use default placeholders
         if ($appraisers->isEmpty()) {
-            // إنشاء قائمة افتراضية من المخمنين
-            $defaultAppraisers = [
-                (object)[
+            $appraisers = collect([
+                [
                     'id' => 1,
                     'name' => 'John Smith',
                     'profile_image' => null,
                     'rating' => 4.5,
                     'specialty' => 'Senior Appraiser',
-                    'bio' => 'Specializes in residential properties with over 15 years of experience in Amman\'s premium neighborhoods.',
-                    'certification' => 'Certified by Jordan Engineers Association'
+                    'bio' => 'Specializes in residential properties with over 15 years of experience.',
+                    'certification' => 'Certified Appraiser'
                 ],
-                (object)[
+                [
                     'id' => 2,
                     'name' => 'Sarah Johnson',
                     'profile_image' => null,
-                    'rating' => 4.9,
-                    'specialty' => 'Commercial Expert',
-                    'bio' => 'Expert in commercial properties and investment analysis with international valuation experience.',
-                    'certification' => 'RICS Certified Valuer'
-                ],
-                (object)[
-                    'id' => 3,
-                    'name' => 'Mohammed Al-Abdullah',
-                    'profile_image' => null,
-                    'rating' => 4.2,
-                    'specialty' => 'Land Specialist',
-                    'bio' => 'Specialized in land valuation and development potential assessment across Jordan.',
-                    'certification' => 'Dept. of Lands Certified'
-                ],
-                (object)[
-                    'id' => 4,
-                    'name' => 'Layla Hassan',
-                    'profile_image' => null,
-                    'rating' => 4.6,
-                    'specialty' => 'Luxury Properties',
-                    'bio' => 'Specialized in luxury and high-end property valuations in Amman\'s elite neighborhoods.',
-                    'certification' => 'International Valuation Standards'
-                ],
-            ];
-            
-            $appraisers = collect($defaultAppraisers);
+                    'rating' => 4.8,
+                    'specialty' => 'Commercial Properties',
+                    'bio' => 'Expert in commercial real estate valuation.',
+                    'certification' => 'RICS Certified'
+                ]
+            ]);
         }
         
         return view('public.property-estimation', compact('appraisers'));
@@ -79,9 +56,8 @@ class PropertyAppraisalController extends Controller
      */
     public function bookAppointment(Request $request)
     {
-        // Validate the request
         $validator = Validator::make($request->all(), [
-            'appraiser_id' => 'required|exists:users,id',
+            'appraiser_id' => 'required|exists:appraisers,id', // Changed to appraisers table
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required',
             'property_address' => 'required|string',
@@ -104,9 +80,8 @@ class PropertyAppraisalController extends Controller
         }
 
         try {
-            // Create the appointment
             $appraisal = new PropertyAppraisal();
-            $appraisal->user_id = Auth::id(); // Currently logged in user
+            $appraisal->user_id = Auth::id();
             $appraisal->appraiser_id = $request->appraiser_id;
             $appraisal->client_name = $request->client_name;
             $appraisal->client_email = $request->client_email;
@@ -119,21 +94,16 @@ class PropertyAppraisalController extends Controller
             $appraisal->bedrooms = $request->bedrooms;
             $appraisal->bathrooms = $request->bathrooms;
             $appraisal->additional_notes = $request->additional_notes;
-            $appraisal->status = 'pending'; // Default status is pending
+            $appraisal->status = 'pending';
             $appraisal->save();
 
-            // Return success response
             return response()->json([
                 'success' => true,
                 'message' => 'Appointment booked successfully',
                 'appointment' => $appraisal
             ]);
         } catch (\Exception $e) {
-            // Log error
             Log::error('Error booking appointment: ' . $e->getMessage());
-
-            
-            // Return error response
             return response()->json([
                 'success' => false,
                 'message' => 'Error booking appointment',
@@ -150,7 +120,9 @@ class PropertyAppraisalController extends Controller
     public function myAppointments()
     {
         $appraisals = PropertyAppraisal::where('user_id', Auth::id())
-            ->with('appraiser')
+            ->with(['appraiser' => function($query) {
+                $query->select('id', 'name', 'profile_image', 'rating');
+            }])
             ->orderBy('appointment_date', 'desc')
             ->paginate(10);
             
@@ -165,13 +137,11 @@ class PropertyAppraisalController extends Controller
      */
     public function cancelAppointment(PropertyAppraisal $appraisal)
     {
-        // Check if the user owns this appointment
         if ($appraisal->user_id !== Auth::id()) {
             return redirect()->route('property.appraisals.my')
                 ->with('error', 'Unauthorized action.');
         }
         
-        // Check if the appointment can be cancelled (not completed)
         if ($appraisal->status === 'completed') {
             return redirect()->route('property.appraisals.my')
                 ->with('error', 'Completed appointments cannot be cancelled.');

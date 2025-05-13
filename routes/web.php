@@ -42,6 +42,21 @@ Route::get('/contact', function () {
     return view('public.contact');
 });
 
+
+// Property Estimation and Appraisal Routes
+Route::get('/property-estimation', [PropertyAppraisalController::class, 'index'])
+     ->name('property.estimation');
+Route::post('/property-appraisal/book', [PropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
+
+// Protected appraisal routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/my-appraisals', [PropertyAppraisalController::class, 'myAppointments'])->name('public.property.appraisals.my');
+    Route::put('/property-appraisal/{appraisal}/cancel', [PropertyAppraisalController::class, 'cancelAppointment'])->name('property.appraisal.cancel');
+});
+
+// Property Appraisal Route - Keep this for the booking
+Route::post('/property-appraisal/book', [PropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
+
 // Property Image Routes
 Route::get('/properties/{property}/images', [PropertyImageController::class, 'manage'])->name('properties.images.manage');
 Route::post('/properties/{property}/images', [PropertyImageController::class, 'upload'])->name('properties.images.upload');
@@ -57,10 +72,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // Registration Routes
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
-
-// Property Estimation and Appraisal Routes
-Route::get('/property-estimation', [PropertyAppraisalController::class, 'index'])->name('property.estimation');
-Route::post('/property-appraisal/book', [PropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
 
 // Protected appraisal routes
 Route::middleware(['auth'])->group(function () {
@@ -133,7 +144,6 @@ Route::get('/dashboard-test', function () {
     return view('admin.dashboard');
 })->name('dashboard-test');
 
-// إضافة مسار تحويل لصفحة a لتتوافق مع الرابط الموجود في السايدبار
 Route::get('/a', function () {
     return redirect()->route('admin.appraisals.index');
 });

@@ -115,4 +115,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(PaymentTransaction::class);
     }
+    public function appraisals()
+{
+    return $this->hasMany(PropertyAppraisal::class);
+}
+
+/**
+ * Get all appraisals where the user is an appraiser.
+ */
+public function appraisalsAsAppraiser()
+{
+    return $this->hasMany(PropertyAppraisal::class, 'appraiser_id');
+}
 }
