@@ -332,67 +332,79 @@
                         </div>
                       </div>
                     </div>
-                    
                     <div class="bg-light p-4 rounded mb-4">
-                      <h4 class="mb-3 text-primary">Schedule Appointment</h4>
-                      
-                      <div class="row g-3">
-                        <div class="col-md-6 mb-3">
-                          <label for="appointment_date" class="form-label">Preferred Date</label>
-                          <input type="date" class="form-control" id="appointment_date" name="appointment_date" min="{{ date('Y-m-d') }}" required>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                          <label for="appointment_time" class="form-label">Preferred Time</label>
-                          <select class="form-select" id="appointment_time" name="appointment_time" required>
-                            <option value="">Choose...</option>
-                            <optgroup label="Morning">
-                              <option value="09:00">9:00 AM</option>
-                              <option value="10:00">10:00 AM</option>
-                              <option value="11:00">11:00 AM</option>
-                              <option value="12:00">12:00 PM</option>
-                            </optgroup>
-                            <optgroup label="Afternoon">
-                              <option value="13:00">1:00 PM</option>
-                              <option value="14:00">2:00 PM</option>
-                              <option value="15:00">3:00 PM</option>
-                              <option value="16:00">4:00 PM</option>
-                            </optgroup>
-                          </select>
-                        </div>
-                        
-                        <div class="col-md-12 mb-3">
-                          <label for="property_address" class="form-label">Property Address</label>
-                          <textarea class="form-control" id="property_address" name="property_address" rows="3" required></textarea>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                          <label for="client_name" class="form-label">Your Name</label>
-                          <input type="text" class="form-control" id="client_name" name="client_name" value="{{ Auth::user()->name }}" required>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                          <label for="client_phone" class="form-label">Phone Number</label>
-                          <input type="tel" class="form-control" id="client_phone" name="client_phone" value="{{ Auth::user()->phone ?? '' }}" required>
-                        </div>
-                        
-                        <div class="col-md-12 mb-3">
-                          <label for="client_email" class="form-label">Email</label>
-                          <input type="email" class="form-control" id="client_email" name="client_email" value="{{ Auth::user()->email }}" required>
-                        </div>
-                        
-                        <!-- Hidden fields for property details from the instant estimate -->
-                        <input type="hidden" id="property_type" name="property_type" value="">
-                        <input type="hidden" id="property_area" name="property_area" value="">
-                        <input type="hidden" id="bedrooms_count" name="bedrooms" value="">
-                        <input type="hidden" id="bathrooms_count" name="bathrooms" value="">
-                        
-                        <div class="col-md-12 mb-3">
-                          <label for="additional_notes" class="form-label">Additional Notes (Optional)</label>
-                          <textarea class="form-control" id="additional_notes" name="additional_notes" rows="3"></textarea>
-                        </div>
-                      </div>
-                    </div>
+  <h4 class="mb-3 text-primary">Schedule Appointment</h4>
+  
+  <div class="row g-3">
+    <div class="col-md-6 mb-3">
+      <label for="appointment_date" class="form-label">Preferred Date</label>
+      <input type="date" class="form-control" id="appointment_date" name="appointment_date" min="{{ date('Y-m-d') }}" required>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+      <label for="appointment_time" class="form-label">Preferred Time</label>
+      <select class="form-select" id="appointment_time" name="appointment_time" required>
+        <option value="">Choose...</option>
+        <optgroup label="Morning">
+          <option value="09:00">9:00 AM</option>
+          <option value="10:00">10:00 AM</option>
+          <option value="11:00">11:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+        </optgroup>
+        <optgroup label="Afternoon">
+          <option value="13:00">1:00 PM</option>
+          <option value="14:00">2:00 PM</option>
+          <option value="15:00">3:00 PM</option>
+          <option value="16:00">4:00 PM</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <div class="col-md-12 mb-3">
+      <label for="property_address" class="form-label">Property Address</label>
+      <textarea class="form-control" id="property_address" name="property_address" rows="3" required></textarea>
+    </div>
+    
+    <div class="col-md-12 mb-3">
+      <label for="property_type" class="form-label">Property Type</label>
+      <select class="form-select" id="property_type" name="property_type">
+        <option value="">-- Select Property Type --</option>
+        <option value="apartment">Apartment</option>
+        <option value="house">House</option>
+        <option value="villa">Villa</option>
+        <option value="commercial">Commercial</option>
+        <option value="land">Land</option>
+      </select>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+      <label for="client_name" class="form-label">Your Name</label>
+      <input type="text" class="form-control" id="client_name" name="client_name" value="{{ Auth::user()->name }}" required>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+      <label for="client_phone" class="form-label">Phone Number</label>
+      <input type="tel" class="form-control" id="client_phone" name="client_phone" value="{{ Auth::user()->phone ?? '' }}" required>
+    </div>
+    
+    <div class="col-md-12 mb-3">
+      <label for="client_email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="client_email" name="client_email" value="{{ Auth::user()->email }}" required>
+    </div>
+    
+    
+    
+    <!-- Hidden fields for property details from the instant estimate -->
+    <input type="hidden" id="property_area" name="property_area" value="">
+    <input type="hidden" id="bedrooms_count" name="bedrooms" value="">
+    <input type="hidden" id="bathrooms_count" name="bathrooms" value="">
+    
+    <div class="col-md-12 mb-3">
+      <label for="additional_notes" class="form-label">Additional Notes (Optional)</label>
+      <textarea class="form-control" id="additional_notes" name="additional_notes" rows="3"></textarea>
+    </div>
+  </div>
+</div>
                     
                     <div class="text-center mt-4">
                       <button type="button" id="bookAppointmentBtn" class="btn btn-primary btn-lg px-5 py-3">

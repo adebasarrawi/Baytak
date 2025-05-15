@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
-class PropertyAppraisalController extends Controller
+class AppraisalController extends Controller
 {
     /**
      * Display the property estimation page with appraisers

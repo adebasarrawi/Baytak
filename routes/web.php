@@ -10,9 +10,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\VerificationController;
-use App\Http\Controllers\PropertyAppraisalController;
-use App\Http\Controllers\Admin\AppraisalController;
+use App\Http\Controllers\PublicPropertyAppraisalController;
+use App\Http\Controllers\Admin\AdminAppraisalController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 // Public routes
 Route::get('/', function () {
@@ -43,14 +47,14 @@ Route::get('/contact', function () {
 });
 
 
-Route::get('/property-estimation', [PropertyAppraisalController::class, 'index'])
+Route::get('/property-estimation', [PublicPropertyAppraisalController::class, 'index'])
      ->name('property.estimation');
-Route::post('/property-appraisal/book', [PropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
+Route::post('/property-appraisal/book', [PublicPropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
 
 // Protected appraisal routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/my-appraisals', [PropertyAppraisalController::class, 'myAppointments'])->name('public.property.appraisals.my');
-    Route::put('/property-appraisal/{appraisal}/cancel', [PropertyAppraisalController::class, 'cancelAppointment'])->name('property.appraisal.cancel');
+    Route::get('/my-appraisals', [PublicPropertyAppraisalController::class, 'myAppointments'])->name('public.property.appraisals.my');
+    Route::put('/property-appraisal/{appraisal}/cancel', [PublicPropertyAppraisalController::class, 'cancelAppointment'])->name('property.appraisal.cancel');
 });
 
 
@@ -74,21 +78,18 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 // Admin routes for property appraisal management
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard route
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Appraisal Routes
-    Route::get('/appraisals', [AppraisalController::class, 'index'])->name('appraisals.index');
-    Route::get('/appraisals/calendar', [AppraisalController::class, 'calendar'])->name('appraisals.calendar');
-    Route::get('/appraisals/create', [AppraisalController::class, 'create'])->name('appraisals.create');
-    Route::get('/appraisals/{appraisal}/edit', [AppraisalController::class, 'edit'])->name('appraisals.edit');
-    Route::put('/appraisals/{appraisal}', [AppraisalController::class, 'update'])->name('appraisals.update');
-    Route::put('/appraisals/{appraisal}/status', [AppraisalController::class, 'updateStatus'])->name('appraisals.update-status');
-    Route::delete('/appraisals/{appraisal}', [AppraisalController::class, 'destroy'])->name('appraisals.destroy');
-    
-    // Add a route for fetching calendar events via AJAX
-    Route::get('/appraisals/events', [AppraisalController::class, 'getEvents'])->name('appraisals.events');
+    // Appraisal Routes - بترتيب صحيح
+    Route::get('/appraisals/events', [AdminAppraisalController::class, 'getEvents'])->name('appraisals.events');
+    Route::get('/appraisals/calendar', [AdminAppraisalController::class, 'calendar'])->name('appraisals.calendar');
+    Route::get('/appraisals/create', [AdminAppraisalController::class, 'create'])->name('appraisals.create');
+    Route::get('/appraisals', [AdminAppraisalController::class, 'index'])->name('appraisals.index');
+    Route::post('/appraisals', [AdminAppraisalController::class, 'store'])->name('appraisals.store');
+    Route::get('/appraisals/{appraisal}/edit', [AdminAppraisalController::class, 'edit'])->name('appraisals.edit');
+    Route::put('/appraisals/{appraisal}', [AdminAppraisalController::class, 'update'])->name('appraisals.update');
+    Route::put('/appraisals/{appraisal}/status', [AdminAppraisalController::class, 'updateStatus'])->name('appraisals.update-status');
+    Route::delete('/appraisals/{appraisal}', [AdminAppraisalController::class, 'destroy'])->name('appraisals.destroy');
     
     // User routes if needed
     Route::get('/users/{user}', function() {
@@ -132,11 +133,52 @@ Route::middleware(['auth'])->group(function () {
     })->name('seller.dashboard');
 });
 
-// Add this inside your admin routes group
-Route::get('/dashboard-test', function () {
-    return view('admin.dashboard');
-})->name('dashboard-test');
 
+// اختصار للوصول السريع إلى صفحة appraisals
 Route::get('/a', function () {
-    return redirect()->route('admin.appraisals.index');
+    return redirect('/dev/appraisals');
+});
+// مسار مباشر لتحديث حالة الموعد
+Route::get('/direct-status-update/{id}/{status}', function($id, $status) {
+    try {
+        // التحقق من صحة الحالة
+        if (!in_array($status, ['pending', 'confirmed', 'completed', 'cancelled'])) {
+            return redirect()->back()->with('error', 'Invalid status');
+        }
+        
+        // تحديث الحالة مباشرة في قاعدة البيانات
+        $updated = DB::table('property_appraisals')
+            ->where('id', $id)
+            ->update(['status' => $status]);
+            
+        if ($updated) {
+            return redirect()->route('admin.appraisals.index')
+                ->with('success', 'Appointment status updated to ' . ucfirst($status));
+        } else {
+            return redirect()->back()
+                ->with('error', 'Failed to update appointment status');
+        }
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Error updating status: ' . $e->getMessage());
+    }
+});
+
+Route::get('/direct-delete-appraisal/{id}', function($id) {
+    try {
+        $deleted = DB::table('property_appraisals')
+            ->where('id', $id)
+            ->delete();
+            
+        if ($deleted) {
+            return redirect()->route('admin.appraisals.index')
+                ->with('success', 'Appointment deleted successfully');
+        } else {
+            return redirect()->back()
+                ->with('error', 'Failed to delete appointment');
+        }
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Error deleting appointment: ' . $e->getMessage());
+    }
 });

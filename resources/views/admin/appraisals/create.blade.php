@@ -73,8 +73,14 @@
                                         <select class="form-control @error('appraiser_id') is-invalid @enderror" id="appraiser_id" name="appraiser_id" required>
                                             <option value="">-- Select Appraiser --</option>
                                             @foreach($appraisers as $appraiser)
-                                                <option value="{{ $appraiser->id }}" {{ old('appraiser_id') == $appraiser->id ? 'selected' : '' }}>
-                                                    {{ $appraiser->name }} - {{ $appraiser->specialty ?? 'General' }}
+                                                <option value="{{ $appraiser->user_id }}" {{ old('appraiser_id') == $appraiser->user_id ? 'selected' : '' }}>
+                                                    {{ $appraiser->user->name }} 
+                                                    @if($appraiser->specialty)
+                                                        - {{ $appraiser->specialty }}
+                                                    @endif
+                                                    @if($appraiser->license_number)
+                                                        (License: {{ $appraiser->license_number }})
+                                                    @endif
                                                 </option>
                                             @endforeach
                                         </select>
@@ -104,7 +110,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="appointment_date">Appointment Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control @error('appointment_date') is-invalid @enderror" id="appointment_date" name="appointment_date" value="{{ old('appointment_date', date('Y-m-d')) }}" required>
+                                        <input type="date" class="form-control @error('appointment_date') is-invalid @enderror" id="appointment_date" name="appointment_date" value="{{ old('appointment_date', date('Y-m-d')) }}" required min="{{ date('Y-m-d') }}">
                                         @error('appointment_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -178,7 +184,7 @@
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label for="property_address">Property Address <span class="text-danger">*</span></label>
-                                        <textarea class="form-control @error('property_address') is-invalid @enderror" id="property_address" name="property_address" rows="2" required>{{ old('property_address') }}</textarea>
+                                        <textarea class="form-control @error('property_address') is-invalid @enderror" id="property_address" name="property_address" rows="3" required>{{ old('property_address') }}</textarea>
                                         @error('property_address')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -199,39 +205,6 @@
                                         @error('property_type')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="property_area">Property Area (sqm)</label>
-                                        <input type="number" class="form-control @error('property_area') is-invalid @enderror" id="property_area" name="property_area" value="{{ old('property_area') }}">
-                                        @error('property_area')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4">
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <div class="form-group">
-                                                <label for="bedrooms">Bedrooms</label>
-                                                <input type="number" class="form-control @error('bedrooms') is-invalid @enderror" id="bedrooms" name="bedrooms" value="{{ old('bedrooms') }}" min="0">
-                                                @error('bedrooms')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="form-group">
-                                                <label for="bathrooms">Bathrooms</label>
-                                                <input type="number" class="form-control @error('bathrooms') is-invalid @enderror" id="bathrooms" name="bathrooms" value="{{ old('bathrooms') }}" min="0">
-                                                @error('bathrooms')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                                 
@@ -266,7 +239,11 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize any JS components or validation if needed
+        // Set minimum date for appointment date picker
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointment_date').min = today;
+        
+        // You can add more JavaScript here if needed
     });
 </script>
 @endpush

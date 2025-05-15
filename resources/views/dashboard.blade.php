@@ -10,7 +10,7 @@
                     <h5 class="text-white op-7 mb-2">Property Appraisal Management</h5>
                 </div>
                 <div class="ml-md-auto py-2 py-md-0">
-                    <a href="{{ route('admin.appraisals.create') }}" class="btn btn-white btn-border btn-round mr-2">
+                    <a href="{{ url('/appraisals/create') }}" class="btn btn-white btn-border btn-round mr-2">
                         <i class="fa fa-plus"></i> New Appraisal
                     </a>
                     <a href="{{ route('admin.appraisals.calendar') }}" class="btn btn-secondary btn-round">
@@ -109,7 +109,7 @@
                         <div class="card-head-row">
                             <div class="card-title">Recent Appraisal Requests</div>
                             <div class="card-tools">
-                                <a href="{{ route('admin.appraisals.index') }}" class="btn btn-info btn-border btn-round btn-sm">
+                                <a href="{{ url('/appraisals') }}" class="btn btn-info btn-border btn-round btn-sm">
                                     <span class="btn-label">
                                         <i class="fa fa-list"></i>
                                     </span>

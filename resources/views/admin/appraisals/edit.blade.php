@@ -37,6 +37,15 @@
                 </div>
                 @endif
                 
+                @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @endif
+                
                 @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0">
@@ -161,17 +170,14 @@
                         <div class="status-actions mb-4">
                             <h5>Change Status</h5>
                             <div class="btn-group-vertical w-100">
+                                <!-- Status buttons - Modified to use direct links -->
                                 @foreach(['pending', 'confirmed', 'completed', 'cancelled'] as $status)
                                     @if($status != $appraisal->status)
-                                    <form action="{{ route('admin.appraisals.update-status', $appraisal->id) }}" method="POST" class="mb-2">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="status" value="{{ $status }}">
-                                        <button type="submit" class="btn btn-outline-{{ $status == 'pending' ? 'warning' : ($status == 'confirmed' ? 'success' : ($status == 'completed' ? 'primary' : 'danger')) }} btn-block">
-                                            <i class="fas fa-{{ $status == 'pending' ? 'clock' : ($status == 'confirmed' ? 'check-circle' : ($status == 'completed' ? 'flag-checkered' : 'times-circle')) }} mr-2"></i>
-                                            Mark as {{ ucfirst($status) }}
-                                        </button>
-                                    </form>
+                                    <a href="{{ url('/direct-status-update/' . $appraisal->id . '/' . $status) }}" 
+                                       class="btn btn-outline-{{ $status == 'pending' ? 'warning' : ($status == 'confirmed' ? 'success' : ($status == 'completed' ? 'primary' : 'danger')) }} btn-block mb-2">
+                                        <i class="fas fa-{{ $status == 'pending' ? 'clock' : ($status == 'confirmed' ? 'check-circle' : ($status == 'completed' ? 'flag-checkered' : 'times-circle')) }} mr-2"></i>
+                                        Mark as {{ ucfirst($status) }}
+                                    </a>
                                     @endif
                                 @endforeach
                             </div>
@@ -179,15 +185,13 @@
                         
                         <hr>
                         
-                        <!-- Delete -->
+                        <!-- Delete - Changed to direct link -->
                         <h5>Danger Zone</h5>
-                        <form action="{{ route('admin.appraisals.destroy', $appraisal->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this appointment? This action cannot be undone.');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-block">
-                                <i class="fas fa-trash-alt mr-2"></i> Delete Appointment
-                            </button>
-                        </form>
+                        <a href="{{ url('/direct-delete-appraisal/' . $appraisal->id) }}"
+                           class="btn btn-danger btn-block"
+                           onclick="return confirm('Are you sure you want to delete this appointment? This action cannot be undone.');">
+                            <i class="fas fa-trash-alt mr-2"></i> Delete Appointment
+                        </a>
                         
                         @if($appraisal->user)
                         <hr>
@@ -238,6 +242,19 @@
                     </div>
                 </div>
                 @endif
+                
+                <!-- Added Debug Information -->
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="card-title text-white mb-0">Debug Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Appraisal ID:</strong> {{ $appraisal->id }}</p>
+                        <p><strong>Current Status:</strong> {{ $appraisal->status }}</p>
+                        <p><strong>Created At:</strong> {{ $appraisal->created_at }}</p>
+                        <p><strong>Updated At:</strong> {{ $appraisal->updated_at }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

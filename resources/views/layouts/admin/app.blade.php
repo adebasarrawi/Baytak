@@ -46,7 +46,6 @@
     <div class="wrapper">
 
     @include('layouts.admin.__sidebar')
-
     <div class="main-panel">
 
     @include('layouts.admin.__navbar')

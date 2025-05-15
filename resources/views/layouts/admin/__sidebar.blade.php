@@ -19,122 +19,109 @@
                     <div class="collapse in" id="collapseExample">
                         <ul class="nav">
                             <li>
-                                <a href="#profile">
+                                <a href="{{ route('admin.dashboard') }}">
                                     <span class="link-collapse">My Profile</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="#settings">
+                                <a href="{{ route('admin.dashboard') }}">
                                     <span class="link-collapse">Settings</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="#logout">
+                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     <span class="link-collapse">Logout</span>
                                 </a>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                    @csrf
+                                </form>
                             </li>
                         </ul>
                     </div>
                 </div>
             </div>
+            
             <ul class="nav nav-primary">
-                <li class="nav-item {{ request()->is('dashboard*') ? 'active' : '' }}">
-                    <a href="/dashboard">
+                <!-- Dashboard Menu Item -->
+                <li class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('admin.dashboard') }}">
                         <i class="fas fa-home"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
 
-                <!-- Appraisals Menu Item -->
-                <li class="nav-item {{ request()->is('*appraisals*') ? 'active' : '' }}">
-                    <a data-toggle="collapse" href="#appraisals" class="{{ !request()->is('*appraisals*') ? 'collapsed' : '' }}" aria-expanded="{{ request()->is('*appraisals*') ? 'true' : 'false' }}">
+                <!-- Appraisals Menu Item - تغيير كامل لهذا الجزء -->
+                <li class="nav-item 
+                    {{ request()->routeIs('admin.appraisals.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.appraisals.index') }}">
                         <i class="fas fa-clipboard-check text-blue"></i>
-                        <p>Appraisals</p>
-                        <span class="caret"></span>
+                        <p>
+                            Appraisals
+                            <i class="fas fa-chevron-right"></i>
+                        </p>
                     </a>
-                    <div class="collapse {{ request()->is('*appraisals*') ? 'show' : '' }}" id="appraisals">
-                        <ul class="nav nav-collapse">
-                            <li class="{{ request()->is('*appraisals') && !request()->query() ? 'active' : '' }}">
-                                <a href="{{ route('admin.appraisals.index') }}">
-                                    <span class="sub-item">Appraisals List</span>
-                                    <span class="badge badge-info">20</span>
-                                </a>
-                            </li>
-                            <li class="{{ request()->is('*appraisals/calendar') ? 'active' : '' }}">
-                                <a href="{{ route('admin.appraisals.calendar') }}">
-                                    <span class="sub-item">Calendar</span>
-                                </a>
-                            </li>
-                            <li class="{{ request()->is('*appraisals/create') ? 'active' : '' }}">
-                                <a href="{{ route('admin.appraisals.create') }}">
-                                    <span class="sub-item">Create New</span>
-                                </a>
-                            </li>
-                            <li class="{{ request()->is('*appraisals') && request()->query('status') == 'pending' ? 'active' : '' }}">
-                                <a href="{{ route('admin.appraisals.index', ['status' => 'pending']) }}">
-                                    <span class="sub-item">Pending</span>
-                                    <span class="badge badge-warning">10</span>
-                                </a>
-                            </li>
-                            <li class="{{ request()->is('*appraisals') && request()->query('status') == 'completed' ? 'active' : '' }}">
-                                <a href="{{ route('admin.appraisals.index', ['status' => 'completed']) }}">
-                                    <span class="sub-item">Completed</span>
-                                    <span class="badge badge-success">8</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                </li>
+                
+                <!-- Appraisals Sub-Menu Items - تمت إضافتها كعناصر منفصلة -->
+                <li class="nav-item pl-3 
+                    {{ request()->routeIs('admin.appraisals.index') && !request()->has('status') ? 'active' : '' }}">
+                    <a href="{{ route('admin.appraisals.index') }}">
+                        <i class="fas fa-list-alt"></i>
+                        <p>All Appraisals</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item pl-3 
+                    {{ request()->routeIs('admin.appraisals.calendar') ? 'active' : '' }}">
+                    <a href="{{ route('admin.appraisals.calendar') }}">
+                        <i class="fas fa-calendar-alt"></i>
+                        <p>Calendar</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item pl-3 
+                    {{ request()->routeIs('admin.appraisals.create') ? 'active' : '' }}">
+                    <a href="{{ route('admin.appraisals.create') }}">
+                        <i class="fas fa-plus-circle"></i>
+                        <p>Create New</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item pl-3 
+                    {{ request()->routeIs('admin.appraisals.index') && request()->get('status') == 'pending' ? 'active' : '' }}">
+                    <a href="{{ route('admin.appraisals.index', ['status' => 'pending']) }}">
+                        <i class="fas fa-clock text-warning"></i>
+                        <p>Pending</p>
+                    </a>
+                </li>
+                
+                <li class="nav-item pl-3 
+                    {{ request()->routeIs('admin.appraisals.index') && request()->get('status') == 'completed' ? 'active' : '' }}">
+                    <a href="{{ route('admin.appraisals.index', ['status' => 'completed']) }}">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <p>Completed</p>
+                    </a>
                 </li>
 
                 <!-- Properties Menu Item -->
                 <li class="nav-item {{ request()->is('*properties*') ? 'active' : '' }}">
-                    <a data-toggle="collapse" href="#properties" class="{{ !request()->is('*properties*') ? 'collapsed' : '' }}">
+                    <a href="{{ route('properties.index') }}">
                         <i class="fas fa-home text-success"></i>
                         <p>Properties</p>
-                        <span class="caret"></span>
                     </a>
-                    <div class="collapse {{ request()->is('*properties*') ? 'show' : '' }}" id="properties">
-                        <ul class="nav nav-collapse">
-                            <li class="{{ request()->is('*properties') ? 'active' : '' }}">
-                                <a href="#properties-list">
-                                    <span class="sub-item">All Properties</span>
-                                </a>
-                            </li>
-                            <li class="{{ request()->is('*properties/create') ? 'active' : '' }}">
-                                <a href="#properties-create">
-                                    <span class="sub-item">Add Property</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
                 </li>
                 
                 <!-- Users Menu Item -->
                 <li class="nav-item {{ request()->is('*users*') ? 'active' : '' }}">
-                    <a data-toggle="collapse" href="#users" class="{{ !request()->is('*users*') ? 'collapsed' : '' }}">
+                    <a href="{{ route('admin.dashboard') }}">
                         <i class="fas fa-users text-warning"></i>
                         <p>Users</p>
-                        <span class="caret"></span>
                     </a>
-                    <div class="collapse {{ request()->is('*users*') ? 'show' : '' }}" id="users">
-                        <ul class="nav nav-collapse">
-                            <li class="{{ request()->is('*users') ? 'active' : '' }}">
-                                <a href="#users-list">
-                                    <span class="sub-item">User List</span>
-                                </a>
-                            </li>
-                            <li class="{{ request()->is('*users/create') ? 'active' : '' }}">
-                                <a href="#users-create">
-                                    <span class="sub-item">Add User</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
                 </li>
                 
                 <!-- Settings Menu Item -->
                 <li class="nav-item {{ request()->is('*settings*') ? 'active' : '' }}">
-                    <a href="#settings">
+                    <a href="{{ route('admin.dashboard') }}">
                         <i class="fas fa-cog"></i>
                         <p>Settings</p>
                     </a>

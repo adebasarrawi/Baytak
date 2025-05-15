@@ -24,7 +24,7 @@ class PropertyAppraisal extends Model
         'appointment_date',
         'appointment_time',
         'property_type',
-        'property_area',
+        // Removed 'property_area',
         'bedrooms',
         'bathrooms',
         'additional_notes',
