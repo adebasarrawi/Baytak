@@ -171,7 +171,7 @@
                             <h5>Change Status</h5>
                             <div class="btn-group-vertical w-100">
                                 <!-- Status buttons - Modified to use direct links -->
-                                @foreach(['pending', 'confirmed', 'completed', 'cancelled'] as $status)
+                                @foreach(['pending', 'confirmed',  'cancelled'] as $status)
                                     @if($status != $appraisal->status)
                                     <a href="{{ url('/direct-status-update/' . $appraisal->id . '/' . $status) }}" 
                                        class="btn btn-outline-{{ $status == 'pending' ? 'warning' : ($status == 'confirmed' ? 'success' : ($status == 'completed' ? 'primary' : 'danger')) }} btn-block mb-2">
@@ -204,10 +204,7 @@
                             <p><strong>Phone:</strong> {{ $appraisal->user->phone ?? 'N/A' }}</p>
                             <p><strong>Member Since:</strong> {{ $appraisal->user->created_at->format('M d, Y') }}</p>
                         </div>
-                        
-                        <a href="{{ route('admin.users.show', $appraisal->user->id) }}" class="btn btn-secondary btn-block">
-                            <i class="fas fa-user mr-2"></i> View User Profile
-                        </a>
+                      
                         @endif
                     </div>
                 </div>

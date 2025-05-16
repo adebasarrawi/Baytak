@@ -12,6 +12,14 @@ class LoginController extends Controller
     {
         return view('auth.login');
     }
+    protected function authenticated(Request $request, $user)
+{
+    if ($user->user_type === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+    
+    return redirect('/profile'); // or any other default redirect for non-admin users
+}
 
     public function login(Request $request)
     {

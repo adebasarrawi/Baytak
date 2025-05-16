@@ -30,6 +30,7 @@ class Property extends Model
         'longitude',
         'parking_spaces',
         'status',
+        'rejection_reason',
         'year_built',
         'floors',
         'views',
@@ -69,4 +70,18 @@ class Property extends Model
     {
         return $this->belongsToMany(User::class, 'favorites', 'property_id', 'user_id')->withTimestamps();
     }
+    public function scopeApproved($query)
+{
+    return $query->where('status', 'approved');
+}
+
+public function scopePending($query)
+{
+    return $query->where('status', 'pending');
+}
+
+public function scopeRejected($query)
+{
+    return $query->where('status', 'rejected');
+}
 }

@@ -8,9 +8,20 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware(['auth', 'admin']);
+    }
+
     /**
      * Display the admin dashboard.
      *
@@ -18,6 +29,11 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        // Check if the user is authenticated and is an admin
+        if (!Auth::check() || Auth::user()->user_type !== 'admin') {
+            return redirect('/')->with('error', 'You do not have admin access');
+        }
+
         // Counts for each status
         $pendingCount = PropertyAppraisal::where('status', 'pending')->count();
         $confirmedCount = PropertyAppraisal::where('status', 'confirmed')->count();
@@ -43,7 +59,8 @@ class DashboardController extends Controller
             ->get();
         
         // Get all appraisers with their appraisal counts
-        $appraisers = User::where('role', 'appraiser')
+        // Change 'role' to 'user_type' to match your database column
+        $appraisers = User::where('user_type', 'appraiser')
             ->withCount('appraisals')
             ->orderBy('appraisals_count', 'desc')
             ->take(5)

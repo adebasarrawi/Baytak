@@ -37,8 +37,8 @@
           </div>
           
           <div class="list-group">
-          <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
-          <i class="fas fa-user me-2"></i> Account Information
+            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-user me-2"></i> Account Information
             </a>
             <a href="{{ route('profile.edit') }}" class="list-group-item list-group-item-action">
               <i class="fas fa-edit me-2"></i> Edit Profile
@@ -48,7 +48,12 @@
               <i class="fas fa-home me-2"></i> My Properties
             </a>
             @endif
-            <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action">            </a>
+            <a href="{{ route('favorites.index') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-heart me-2"></i> My Favorites
+            </a>
+            <a href="{{ route('public.property.appraisals.my') }}" class="list-group-item list-group-item-action">
+              <i class="fas fa-clipboard-check me-2"></i> My Appraisals
+            </a>
             <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="list-group-item list-group-item-action text-danger">
               <i class="fas fa-sign-out-alt me-2"></i> Logout
             </a>
@@ -72,6 +77,13 @@
         @if(session('success'))
           <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        @endif
+        
+        @if(session('error'))
+          <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         @endif
@@ -110,7 +122,7 @@
         <!-- Property Listings -->
         <div class="row property-list">
           @forelse($properties as $property)
-            <div class="col-md-6 mb-4 property-item" data-status="{{ $property->is_approved === null ? 'pending' : ($property->is_approved ? 'approved' : 'rejected') }}" data-purpose="{{ $property->purpose }}">
+            <div class="col-md-6 mb-4 property-item" data-status="{{ $property->status }}" data-purpose="{{ $property->purpose }}">
               <div class="card h-100 shadow-sm property-card">
                 <div class="position-relative">
                   @php
@@ -128,9 +140,9 @@
                   @endphp
                   <img src="{{ $imagePath }}" class="card-img-top" alt="{{ $property->title }}" style="height: 200px; object-fit: cover;">
                   <div class="property-status-badge position-absolute top-0 end-0 m-2">
-                    @if($property->is_approved === null)
+                    @if($property->status === 'pending')
                       <span class="badge bg-warning">Pending Approval</span>
-                    @elseif($property->is_approved)
+                    @elseif($property->status === 'approved')
                       <span class="badge bg-success">Approved</span>
                     @else
                       <span class="badge bg-danger">Rejected</span>
@@ -151,13 +163,20 @@
                     <span><i class="fas fa-ruler-combined text-primary me-1"></i> {{ $property->size }} sq.ft</span>
                   </div>
                   <div class="property-status mb-3">
-                    @if($property->is_approved === null)
+                    @if($property->status === 'pending')
                       <div class="alert alert-warning py-1 px-2 mb-2 small">
                         <i class="fas fa-clock me-1"></i> Your property is pending approval. Our team will review it shortly.
                       </div>
-                    @elseif(!$property->is_approved)
+                    @elseif($property->status === 'rejected')
                       <div class="alert alert-danger py-1 px-2 mb-2 small">
-                        <i class="fas fa-times-circle me-1"></i> Your property was rejected. Please contact support for more information.
+                        <i class="fas fa-times-circle me-1"></i> Your property was rejected.
+                        @if($property->rejection_reason)
+                          <strong>Reason:</strong> {{ $property->rejection_reason }}
+                        @endif
+                      </div>
+                    @else
+                      <div class="alert alert-success py-1 px-2 mb-2 small">
+                        <i class="fas fa-check-circle me-1"></i> Your property is approved and visible to the public.
                       </div>
                     @endif
                   </div>
@@ -259,6 +278,21 @@
     
     statusFilter.addEventListener('change', applyFilters);
     purposeFilter.addEventListener('change', applyFilters);
+    
+    // Apply filters on page load if there are values in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const statusParam = urlParams.get('status');
+    const purposeParam = urlParams.get('purpose');
+    
+    if (statusParam) {
+      statusFilter.value = statusParam;
+    }
+    
+    if (purposeParam) {
+      purposeFilter.value = purposeParam;
+    }
+    
+    applyFilters();
   });
 </script>
 @endpush

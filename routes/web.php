@@ -12,7 +12,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\PublicPropertyAppraisalController;
 use App\Http\Controllers\Admin\AdminAppraisalController;
+
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AdminPropertyController;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -74,29 +76,33 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
 
-
-// Admin routes for property appraisal management
+// Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard route
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // Appraisal Routes - بترتيب صحيح
-    Route::get('/appraisals/events', [AdminAppraisalController::class, 'getEvents'])->name('appraisals.events');
-    Route::get('/appraisals/calendar', [AdminAppraisalController::class, 'calendar'])->name('appraisals.calendar');
-    Route::get('/appraisals/create', [AdminAppraisalController::class, 'create'])->name('appraisals.create');
-    Route::get('/appraisals', [AdminAppraisalController::class, 'index'])->name('appraisals.index');
-    Route::post('/appraisals', [AdminAppraisalController::class, 'store'])->name('appraisals.store');
-    Route::get('/appraisals/{appraisal}/edit', [AdminAppraisalController::class, 'edit'])->name('appraisals.edit');
-    Route::put('/appraisals/{appraisal}', [AdminAppraisalController::class, 'update'])->name('appraisals.update');
-    Route::put('/appraisals/{appraisal}/status', [AdminAppraisalController::class, 'updateStatus'])->name('appraisals.update-status');
-    Route::delete('/appraisals/{appraisal}', [AdminAppraisalController::class, 'destroy'])->name('appraisals.destroy');
-    
-    // User routes if needed
-    Route::get('/users/{user}', function() {
-        // Placeholder for user profile view - replace with actual controller method
-        return redirect()->route('admin.dashboard');
-    })->name('users.show');
+
+    // Appraisal Management
+    Route::prefix('appraisals')->name('appraisals.')->group(function () {
+        Route::get('/', [AdminAppraisalController::class, 'index'])->name('index');
+        Route::get('/create', [AdminAppraisalController::class, 'create'])->name('create');
+        Route::post('/', [AdminAppraisalController::class, 'store'])->name('store');
+        Route::get('/{appraisal}/edit', [AdminAppraisalController::class, 'edit'])->name('edit');
+        Route::put('/{appraisal}', [AdminAppraisalController::class, 'update'])->name('update');
+        Route::put('/{appraisal}/status', [AdminAppraisalController::class, 'updateStatus'])->name('update-status');
+        Route::delete('/{appraisal}', [AdminAppraisalController::class, 'destroy'])->name('destroy');
+        Route::get('/calendar', [AdminAppraisalController::class, 'calendar'])->name('calendar');
+        Route::get('/events', [AdminAppraisalController::class, 'getEvents'])->name('events');
+    });
+
+    // Property Management
+    Route::prefix('properties')->name('properties.')->group(function () {
+        Route::get('/', [AdminPropertyController::class, 'index'])->name('index');
+        Route::get('/{property}/edit', [AdminPropertyController::class, 'edit'])->name('edit');
+        Route::put('/{property}/status', [AdminPropertyController::class, 'updateStatus'])->name('update-status');
+        Route::delete('/{property}', [AdminPropertyController::class, 'destroy'])->name('destroy');
+    });
 });
+
 
 // Protected Routes for Authenticated Users
 Route::middleware(['auth'])->group(function () {
@@ -164,6 +170,32 @@ Route::get('/direct-status-update/{id}/{status}', function($id, $status) {
     }
 });
 
+// Add this to your web.php file
+Route::get('/check-admin', function () {
+    if (Auth::check() && Auth::user()->role === 'admin') {
+        return 'You are authenticated as admin. User ID: ' . Auth::id() . ', Role: ' . Auth::user()->role;
+    } elseif (Auth::check()) {
+        return 'You are authenticated but not as admin. User ID: ' . Auth::id() . ', Role: ' . Auth::user()->role;
+    } else {
+        return 'You are not authenticated';
+    }
+});
+
+Route::get('/debug-user', function() {
+    if (Auth::check()) {
+        return [
+            'authenticated' => true,
+            'id' => Auth::id(),
+            'name' => Auth::user()->name,
+            'email' => Auth::user()->email,
+            'user_type' => Auth::user()->user_type
+        ];
+    } else {
+        return [
+            'authenticated' => false
+        ];
+    }
+});
 Route::get('/direct-delete-appraisal/{id}', function($id) {
     try {
         $deleted = DB::table('property_appraisals')
@@ -181,4 +213,12 @@ Route::get('/direct-delete-appraisal/{id}', function($id) {
         return redirect()->back()
             ->with('error', 'Error deleting appointment: ' . $e->getMessage());
     }
+    
+
+    Route::get('/dashboard', function () {
+        if (Auth::check() && Auth::user()->user_type === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+        return view('dashboard'); // Regular dashboard for non-admin users
+    });
 });

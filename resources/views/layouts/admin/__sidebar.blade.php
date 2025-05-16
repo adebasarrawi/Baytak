@@ -40,7 +40,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <ul class="nav nav-primary">
                 <!-- Dashboard Menu Item -->
                 <li class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -49,19 +49,22 @@
                         <p>Dashboard</p>
                     </a>
                 </li>
+<!-- لعقارات -->
+<li class="nav-item {{ request()->is('admin/properties*') ? 'active' : '' }}">
+    <a href="{{ route('admin.properties.index') }}">
+        <i class="fas fa-home text-success"></i>
+        <p>Properties</p>
+    </a>
+</li>
 
-                <!-- Appraisals Menu Item - تغيير كامل لهذا الجزء -->
-                <li class="nav-item 
-                    {{ request()->routeIs('admin.appraisals.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.appraisals.index') }}">
-                        <i class="fas fa-clipboard-check text-blue"></i>
-                        <p>
-                            Appraisals
-                            <i class="fas fa-chevron-right"></i>
-                        </p>
-                    </a>
-                </li>
-                
+<!-- للحجوزات -->
+<li class="nav-item {{ request()->is('admin/appraisals*') ? 'active' : '' }}">
+    <a href="{{ route('admin.appraisals.index') }}">
+        <i class="fas fa-clipboard-check text-blue"></i>
+        <p>Appraisals</p>
+    </a>
+</li>
+
                 <!-- Appraisals Sub-Menu Items - تمت إضافتها كعناصر منفصلة -->
                 <li class="nav-item pl-3 
                     {{ request()->routeIs('admin.appraisals.index') && !request()->has('status') ? 'active' : '' }}">
@@ -70,7 +73,7 @@
                         <p>All Appraisals</p>
                     </a>
                 </li>
-                
+
                 <li class="nav-item pl-3 
                     {{ request()->routeIs('admin.appraisals.calendar') ? 'active' : '' }}">
                     <a href="{{ route('admin.appraisals.calendar') }}">
@@ -78,7 +81,7 @@
                         <p>Calendar</p>
                     </a>
                 </li>
-                
+
                 <li class="nav-item pl-3 
                     {{ request()->routeIs('admin.appraisals.create') ? 'active' : '' }}">
                     <a href="{{ route('admin.appraisals.create') }}">
@@ -86,7 +89,7 @@
                         <p>Create New</p>
                     </a>
                 </li>
-                
+
                 <li class="nav-item pl-3 
                     {{ request()->routeIs('admin.appraisals.index') && request()->get('status') == 'pending' ? 'active' : '' }}">
                     <a href="{{ route('admin.appraisals.index', ['status' => 'pending']) }}">
@@ -94,7 +97,7 @@
                         <p>Pending</p>
                     </a>
                 </li>
-                
+
                 <li class="nav-item pl-3 
                     {{ request()->routeIs('admin.appraisals.index') && request()->get('status') == 'completed' ? 'active' : '' }}">
                     <a href="{{ route('admin.appraisals.index', ['status' => 'completed']) }}">
@@ -103,14 +106,9 @@
                     </a>
                 </li>
 
-                <!-- Properties Menu Item -->
-                <li class="nav-item {{ request()->is('*properties*') ? 'active' : '' }}">
-                    <a href="{{ route('properties.index') }}">
-                        <i class="fas fa-home text-success"></i>
-                        <p>Properties</p>
-                    </a>
-                </li>
                 
+
+        
                 <!-- Users Menu Item -->
                 <li class="nav-item {{ request()->is('*users*') ? 'active' : '' }}">
                     <a href="{{ route('admin.dashboard') }}">
@@ -118,7 +116,7 @@
                         <p>Users</p>
                     </a>
                 </li>
-                
+
                 <!-- Settings Menu Item -->
                 <li class="nav-item {{ request()->is('*settings*') ? 'active' : '' }}">
                     <a href="{{ route('admin.dashboard') }}">

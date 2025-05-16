@@ -25,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
 
         \Illuminate\Support\Facades\Route::aliasMiddleware('admin', \App\Http\Middleware\AdminMiddleware::class);
+        
     }
 }
