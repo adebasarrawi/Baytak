@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Feature extends Model
 {
-    public function properties()
-{
-    return $this->belongsToMany(Property::class, 'property_features');
-}
+    protected $fillable = ['name', 'icon'];
 
+    // علاقة الميزة بالعقارات (Many-to-Many)
+    public function properties()
+    {
+        return $this->belongsToMany(Property::class, 'property_feature');
+    }
 }

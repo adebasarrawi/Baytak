@@ -55,6 +55,40 @@ class PublicPropertyAppraisalController extends Controller
         
         return view('public.property-estimation', compact('appraisers'));
     }
+    /**
+ * Check if an appointment slot is available.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function checkAvailability(Request $request)
+{
+    // Validate the request data
+    $validated = $request->validate([
+        'appraiser_id' => 'required|integer',
+        'appointment_date' => 'required|date|after_or_equal:today',
+        'appointment_time' => 'required',
+    ]);
+    
+    // Convert the appointment time to a standard format for comparison
+    $appointmentTime = date('H:i:s', strtotime($validated['appointment_time']));
+    
+    // Check if there's an existing appointment with the same appraiser, date, and time
+    // that is either pending or confirmed (not cancelled)
+    $conflictingAppointment = PropertyAppraisal::where('appraiser_id', $validated['appraiser_id'])
+        ->where('appointment_date', $validated['appointment_date'])
+        ->where('appointment_time', $appointmentTime)
+        ->whereIn('status', ['pending', 'confirmed'])
+        ->first();
+    
+    // Return JSON response with availability status
+    return response()->json([
+        'available' => $conflictingAppointment === null,
+        'message' => $conflictingAppointment ? 
+            'The selected time slot is already booked.' : 
+            'The selected time slot is available.'
+    ]);
+}
 
     /**
      * Store a new appraisal appointment request.
@@ -64,38 +98,53 @@ class PublicPropertyAppraisalController extends Controller
      */
     public function bookAppointment(Request $request)
     {
-        $validated = $request->validate([
-            'appraiser_id' => 'required|integer',
-            'client_name' => 'required|string|max:255',
-            'client_email' => 'required|email|max:255',
-            'client_phone' => 'required|string|max:20',
-            'property_address' => 'required|string',
-            'property_type' => 'nullable|string', 
-
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required',
-            'additional_notes' => 'nullable|string',
-        ]);
-
-        // Add user_id if authenticated (should always be the case due to middleware)
-        $validated['user_id'] = Auth::id();
-         
-        // Set initial status
-        $validated['status'] = 'pending';
-
-        // Create the appraisal record
-        $appraisal = PropertyAppraisal::create($validated);
-
-        // In a real application, you would send notifications here
-        // - Email to the client
-        // - Notification to the appraiser
-        // - Internal notification to admin
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Your appointment request has been submitted successfully!',
-            'appraisal' => $appraisal
-        ]);
+        Log::info('Booking appointment request received', $request->all());
+        
+        try {
+            $validated = $request->validate([
+                'appraiser_id' => 'required|integer',
+                'client_name' => 'required|string|max:255',
+                'client_email' => 'required|email|max:255',
+                'client_phone' => 'required|string|max:20',
+                'property_address' => 'required|string',
+                'property_type' => 'nullable|string', 
+                'appointment_date' => 'required|date|after_or_equal:today',
+                'appointment_time' => 'required',
+                'additional_notes' => 'nullable|string',
+              
+            ]);
+    
+            // Add user_id if authenticated (should always be the case due to middleware)
+            $validated['user_id'] = Auth::id();
+             
+            // Set initial status
+            $validated['status'] = 'pending';
+    
+            // Log the data before creating the record
+            Log::info('Attempting to create appointment with data:', $validated);
+    
+            // Create the appraisal record
+            $appraisal = PropertyAppraisal::create($validated);
+            
+            Log::info('Appointment created successfully', ['id' => $appraisal->id]);
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Your appointment request has been submitted successfully!',
+                'appraisal' => $appraisal
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating appointment: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'There was an error processing your request: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

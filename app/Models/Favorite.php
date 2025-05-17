@@ -9,15 +9,16 @@ class Favorite extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'property_id'];
+    protected $fillable = [
+        'user_id',
+        'property_id',
+    ];
 
-    // Relationship with User
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relationship with Property
     public function property()
     {
         return $this->belongsTo(Property::class);

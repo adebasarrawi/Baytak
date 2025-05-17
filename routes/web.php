@@ -52,6 +52,9 @@ Route::get('/contact', function () {
 Route::get('/property-estimation', [PublicPropertyAppraisalController::class, 'index'])
      ->name('property.estimation');
 Route::post('/property-appraisal/book', [PublicPropertyAppraisalController::class, 'bookAppointment'])->name('property.appraisal.book');
+Route::post('/property-appraisal/check-availability', [PublicPropertyAppraisalController::class, 'checkAvailability'])
+    ->name('property.appraisal.check-availability');
+// Route::post('/property-appraisal/available-slots', [PublicPropertyAppraisalController::class, 'getAvailableTimeSlots'])->name('property.appraisal.available-slots');
 
 // Protected appraisal routes
 Route::middleware(['auth'])->group(function () {
@@ -118,8 +121,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-properties', [PropertyController::class, 'myProperties'])->name('properties.my');
     
     // Favorites routes
-    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-    Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     
     // Notifications routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -140,19 +143,16 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-// اختصار للوصول السريع إلى صفحة appraisals
 Route::get('/a', function () {
     return redirect('/dev/appraisals');
 });
-// مسار مباشر لتحديث حالة الموعد
+
 Route::get('/direct-status-update/{id}/{status}', function($id, $status) {
     try {
-        // التحقق من صحة الحالة
         if (!in_array($status, ['pending', 'confirmed', 'completed', 'cancelled'])) {
             return redirect()->back()->with('error', 'Invalid status');
         }
         
-        // تحديث الحالة مباشرة في قاعدة البيانات
         $updated = DB::table('property_appraisals')
             ->where('id', $id)
             ->update(['status' => $status]);
@@ -170,7 +170,6 @@ Route::get('/direct-status-update/{id}/{status}', function($id, $status) {
     }
 });
 
-// Add this to your web.php file
 Route::get('/check-admin', function () {
     if (Auth::check() && Auth::user()->role === 'admin') {
         return 'You are authenticated as admin. User ID: ' . Auth::id() . ', Role: ' . Auth::user()->role;

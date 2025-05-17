@@ -721,7 +721,7 @@
 
 @push('scripts')
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Estimation calculator
     const calculateEstimateBtn = document.getElementById('calculateEstimateBtn');
     const estimationResult = document.getElementById('estimationResult');
@@ -887,86 +887,166 @@
         const clientName = document.getElementById('client_name').value;
         const clientPhone = document.getElementById('client_phone').value;
         const clientEmail = document.getElementById('client_email').value;
-        const additionalNotes = document.getElementById('additional_notes').value;
-        
-        // Get hidden property details
-        const propertyType = document.getElementById('property_type').value;
-        const propertyArea = document.getElementById('property_area').value;
-        const bedrooms = document.getElementById('bedrooms_count').value;
-        const bathrooms = document.getElementById('bathrooms_count').value;
         
         // Simple validation
-        if (!selectedAppraiser || !appointmentDate || !appointmentTime || !propertyAddress || !clientName || !clientPhone || !clientEmail) {
+        if (!selectedAppraiser || !appointmentDate || !appointmentTime || !propertyAddress 
+            || !clientName || !clientPhone || !clientEmail) {
           alert('Please fill in all required fields.');
           return;
         }
         
         // Show loading state
-        bookAppointmentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
+        bookAppointmentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Checking availability...';
         bookAppointmentBtn.disabled = true;
         
-        // Prepare form data
-        const formData = {
-          _token: document.querySelector('input[name="_token"]').value,
-          appraiser_id: selectedAppraiser,
-          appointment_date: appointmentDate,
-          appointment_time: appointmentTime,
-          property_address: propertyAddress,
-          client_name: clientName,
-          client_phone: clientPhone,
-          client_email: clientEmail,
-          property_type: propertyType,
-          property_area: propertyArea,
-          bedrooms: bedrooms,
-          bathrooms: bathrooms,
-          additional_notes: additionalNotes
-        };
-        
-        // Send AJAX request to book appointment
-        fetch('{{ route("property.appraisal.book") }}', {
+        // First check if the appointment slot is available
+        fetch('/property-appraisal/check-availability', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify({
+            appraiser_id: selectedAppraiser,
+            appointment_date: appointmentDate,
+            appointment_time: appointmentTime
+          })
         })
-        .then(response => response.json())
+        .then(response => {
+          console.log('Availability check response status:', response.status);
+          return response.json();
+        })
         .then(data => {
-          if (data.success) {
-            // Format date and time
-            const formattedDate = new Date(appointmentDate);
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDateTime = `${formattedDate.toLocaleDateString('en-US', options)} at ${formatTime(appointmentTime)}`;
-            
-            // Update confirmation
-            confirmedAppraiser.textContent = appraiserName;
-            confirmedDateTime.textContent = formattedDateTime;
-            confirmedAddress.textContent = propertyAddress;
-            
-            // Show confirmation
-            bookingConfirmation.classList.remove('d-none');
-            
-            // Scroll to confirmation
-            bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
-            
-            // Reset form
-            document.getElementById('bookingForm').reset();
+          console.log('Availability check result:', data);
+          if (data.available) {
+            // Slot is available, proceed with booking
+            submitBookingForm(selectedAppraiser, appointmentDate, appointmentTime, 
+                              propertyAddress, clientName, clientPhone, clientEmail,
+                              appraiserName);
           } else {
-            // Show error message
-            alert('There was an error booking your appointment. Please try again.');
-            console.error(data.errors || data.message);
+            // Slot is not available
+            bookAppointmentBtn.innerHTML = '<i class="fas fa-calendar-check me-2"></i> Book Appointment';
+            bookAppointmentBtn.disabled = false;
+            
+            // Show conflict popup
+            Swal.fire({
+              icon: 'warning',
+              title: 'Time Slot Not Available',
+              text: 'The selected time slot is already booked. Please choose another time or date.',
+              confirmButtonText: 'Choose Another Time',
+              confirmButtonColor: '#0d6efd'
+            });
           }
         })
         .catch(error => {
-          console.error('Error:', error);
-          alert('There was an error booking your appointment. Please try again.');
-        })
-        .finally(() => {
-          // Reset button state
+          console.error('Error checking availability:', error);
           bookAppointmentBtn.innerHTML = '<i class="fas fa-calendar-check me-2"></i> Book Appointment';
           bookAppointmentBtn.disabled = false;
+          alert('There was an error checking appointment availability. Please try again.');
         });
+      });
+    }
+
+    // Function to submit the booking form after availability check
+    function submitBookingForm(appraiser_id, appointment_date, appointment_time, 
+                              property_address, client_name, client_phone, client_email,
+                              appraiserName) {
+      
+      // Get other form fields
+      const propertyType = document.getElementById('property_type').value;
+      const propertyArea = document.getElementById('property_area').value;
+      const bedrooms = document.getElementById('bedrooms_count').value;
+      const bathrooms = document.getElementById('bathrooms_count').value;
+      const additionalNotes = document.getElementById('additional_notes').value;
+      
+      // Get CSRF token
+      const token = document.querySelector('input[name="_token"]').value;
+      console.log('CSRF Token available:', !!token);
+      
+      // Prepare form data
+      const formData = {
+        _token: token,
+        appraiser_id: appraiser_id,
+        appointment_date: appointment_date,
+        appointment_time: appointment_time,
+        property_address: property_address,
+        client_name: client_name,
+        client_phone: client_phone,
+        client_email: client_email,
+        property_type: propertyType,
+        property_area: propertyArea,
+        bedrooms: bedrooms,
+        bathrooms: bathrooms,
+        additional_notes: additionalNotes
+      };
+      
+      // Debug: Log the data being sent
+      console.log('Booking form data to submit:', formData);
+      
+      // Update button to indicate booking in progress
+      bookAppointmentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Booking your appointment...';
+      
+      // Send AJAX request to book appointment
+      fetch('/property-appraisal/book', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(response => {
+        console.log('Booking response status:', response.status);
+        if (!response.ok) {
+          console.error('Response not OK:', response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Booking response data:', data);
+        if (data.success) {
+          // Format date and time
+          const formattedDate = new Date(appointment_date);
+          const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+          const formattedDateTime = `${formattedDate.toLocaleDateString('en-US', options)} at ${formatTime(appointment_time)}`;
+          
+          // Update confirmation
+          confirmedAppraiser.textContent = appraiserName;
+          confirmedDateTime.textContent = formattedDateTime;
+          confirmedAddress.textContent = property_address;
+          
+          // Show confirmation
+          bookingConfirmation.classList.remove('d-none');
+          
+          // Scroll to confirmation
+          bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
+          
+          // Reset form
+          document.getElementById('bookingForm').reset();
+        } else {
+          // Show error message
+          console.error('Booking error:', data);
+          Swal.fire({
+            icon: 'error',
+            title: 'Booking Error',
+            text: data.message || 'There was an error booking your appointment. Please try again.',
+            confirmButtonColor: '#0d6efd'
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Connection Error',
+          text: 'There was a problem connecting to the server. Please try again later.',
+          confirmButtonColor: '#0d6efd'
+        });
+      })
+      .finally(() => {
+        // Reset button state
+        bookAppointmentBtn.innerHTML = '<i class="fas fa-calendar-check me-2"></i> Book Appointment';
+        bookAppointmentBtn.disabled = false;
       });
     }
     
@@ -977,7 +1057,9 @@
       return hour > 12 ? `${hour - 12}:${minutes} PM` : `${hour}:${minutes} AM`;
     }
   });
-</script>
+  </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 @endpush
 
 @push('styles')

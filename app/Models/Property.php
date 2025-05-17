@@ -6,11 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Property extends Model
 {
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'user_id',
         'title',
@@ -37,21 +32,25 @@ class Property extends Model
         'rejection_reason'
     ];
 
+    // علاقة العقار بنوع العقار
     public function type()
     {
         return $this->belongsTo(PropertyType::class, 'property_type_id');
     }
 
+    // علاقة العقار بالمنطقة
     public function area()
     {
         return $this->belongsTo(Area::class);
     }
 
+    // علاقة العقار بالمستخدم
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    // علاقة العقار بالميزات (Many-to-Many)
     public function features()
     {
         return $this->belongsToMany(Feature::class, 'property_feature');
@@ -70,18 +69,68 @@ class Property extends Model
     {
         return $this->belongsToMany(User::class, 'favorites', 'property_id', 'user_id')->withTimestamps();
     }
+
+    // نطاقات البحث
     public function scopeApproved($query)
-{
-    return $query->where('status', 'approved');
-}
+    {
+        return $query->where('status', 'approved');
+    }
 
-public function scopePending($query)
-{
-    return $query->where('status', 'pending');
-}
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
 
-public function scopeRejected($query)
-{
-    return $query->where('status', 'rejected');
-}
+    public function scopeRejected($query)
+    {
+        return $query->where('status', 'rejected');
+    }
+
+    // نطاق البحث حسب المنطقة
+    public function scopeArea($query, $areaId)
+    {
+        if ($areaId) {
+            return $query->where('area_id', $areaId);
+        }
+        return $query;
+    }
+
+    // نطاق البحث حسب الميزات
+    public function scopeWithFeatures($query, $featureIds)
+    {
+        if (!empty($featureIds)) {
+            return $query->whereHas('features', function($q) use ($featureIds) {
+                $q->whereIn('features.id', $featureIds);
+            });
+        }
+        return $query;
+    }
+
+    // نطاق البحث حسب السعر
+    public function scopePriceRange($query, $minPrice, $maxPrice)
+    {
+        if ($minPrice >= 0) {
+            $query->where('price', '>=', $minPrice);
+        }
+        
+        if ($maxPrice >= 0) {
+            $query->where('price', '<=', $maxPrice);
+        }
+        
+        return $query;
+    }
+
+    // نطاق البحث حسب المساحة
+    public function scopeSizeRange($query, $minSize, $maxSize)
+    {
+        if ($minSize >= 0) {
+            $query->where('size', '>=', $minSize);
+        }
+        
+        if ($maxSize >= 0) {
+            $query->where('size', '<=', $maxSize);
+        }
+        
+        return $query;
+    }
 }

@@ -96,40 +96,6 @@ hr {
   opacity: 0.25; }
 
   /* Add these styles to your CSS file or in a <style> tag in the head section */
-/* Favorite Button Styling */
-.favorite-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #aaa;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 3;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.favorite-btn:hover {
-  transform: scale(1.1);
-  color: #ff5e62;
-}
-
-.favorite-btn.active {
-  color: #ff5e62;
-}
-
-/* Animation for favorite button */
-.favorite-btn.animated {
-  animation: heartBeat 0.5s;
-}
 
 @keyframes heartBeat {
   0% {
@@ -10270,19 +10236,8 @@ textarea {
     font-weight: 700;
     color: #000; }
   .property-item .property-content .price {
-    color:#13137e; }
-    .property-item .property-content .price span {
-      position: relative;
-      padding-bottom: 4px;
-      display: inline-block; }
-      .property-item .property-content .price span:after {
-        position: absolute;
-        content: "";
-        width: 100%;
-        height: 2px;
-        left: 0;
-        bottom: 0;
-        background-color:#13137e; }
+    color:#6a1a21; }
+   
   .property-item .property-content .specs {
     font-size: 18px; }
     .property-item .property-content .specs .caption {

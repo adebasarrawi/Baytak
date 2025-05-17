@@ -69,117 +69,115 @@ use Illuminate\Support\Facades\Auth;
         </form>
       </div>
     </div>
-
-    @if($properties->count() > 0)
-      <div class="row">
-        @foreach($properties as $property)
-        <div class="col-md-6 col-lg-4 mb-4">
-          <div class="property-item h-100 overflow-hidden position-relative">
-            <a href="{{ route('properties.show', $property->id) }}" class="img position-relative d-block">
-              @php
-                $primaryImage = $property->images->where('is_primary', true)->first();
-                $fallbackImage = $property->images->first();
-                $imagePath = null;
-                
-                if ($primaryImage && file_exists(public_path('storage/' . $primaryImage->image_path))) {
-                  $imagePath = asset('storage/' . $primaryImage->image_path);
-                } elseif ($fallbackImage && file_exists(public_path('storage/' . $fallbackImage->image_path))) {
-                  $imagePath = asset('storage/' . $fallbackImage->image_path);
-                } else {
-                  $imagePath = asset('images/default-property.jpg');
-                }
-              @endphp
-              
-              <img src="{{ $imagePath }}" alt="{{ $property->title }}" class="img-fluid w-100 property-image" style="height: 250px; object-fit: cover;">
-
-              <div class="property-overlay">
-                <span class="property-type">{{ $property->type->name ?? 'N/A' }}</span>
-              </div>
-
-              @if($property->is_featured)
-                <span class="featured-badge">Featured</span>
-              @endif
-              
-              <span class="purpose-badge {{ $property->purpose }}">
-                {{ $property->purpose == 'sale' ? 'For Sale' : 'For Rent' }}
-              </span>
-            </a>
-
-            <!-- Wishlist Heart Icon -->
-            <button class="wishlist-button" type="button" data-property-id="{{ $property->id }}">
-              <i class="far fa-heart wishlist-icon" id="wishlist-{{ $property->id }}"></i>
-            </button>
-            
-            <div class="property-content p-4">
-              <div class="price-area d-flex justify-content-between align-items-center mb-3">
-                <div class="price">
-                  <span class="fs-5 fw-bold text-primary">${{ number_format($property->price) }}</span>
-                  @if($property->purpose == 'rent')
-                    <span class="small text-muted">/month</span>
-                  @endif
-                </div>
-                <div class="area">
-                  <span class="badge bg-light text-dark">
-                    <i class="fas fa-ruler-combined me-1"></i> {{ number_format($property->size) }} sq.ft
-                  </span>
-                </div>
-              </div>
-              
-              <h3 class="h5 mb-2">
-                <a href="{{ route('properties.show', $property->id) }}" class="text-decoration-none text-dark property-title">
-                  {{ \Illuminate\Support\Str::limit($property->title, 40) }}
-                </a>
-              </h3>
-              
-              <div>
-                <p class="mb-2 text-muted small">
-                  <i class="fas fa-map-marker-alt me-1"></i> 
-                  {{ \Illuminate\Support\Str::limit($property->address, 50) }}
-                </p>
-                <p class="city mb-3 small">
-                  <i class="fas fa-map me-1"></i> 
-                  {{ $property->area->name ?? 'N/A' }}
-                </p>
-
-                <div class="specs d-flex mb-3 justify-content-between border-top pt-3">
-                  <span class="d-block d-flex align-items-center small">
-                    <i class="fas fa-bed me-2 text-primary"></i>
-                    <span class="caption">{{ $property->bedrooms ?? 'N/A' }} Beds</span>
-                  </span>
-
-                  <span class="d-block d-flex align-items-center small">
-                    <i class="fas fa-bath me-2 text-primary"></i>
-                    <span class="caption">{{ $property->bathrooms ?? 'N/A' }} Baths</span>
-                  </span>
-                  <span class="d-block d-flex align-items-center small">
-                    <i class="fas fa-car me-2 text-primary"></i>
-                    <span class="caption">{{ $property->parking_spaces ?? 'N/A' }} Parking</span>
-                  </span>
-                 
-                </div>
-
-                <div class="property-footer d-flex justify-content-between">
-                  <a href="{{ route('properties.show', $property->id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
-                  <span class="property-date small text-muted align-self-center">
-                    <i class="far fa-calendar-alt me-1"></i> {{ $property->created_at->diffForHumans() }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        @endforeach
-      </div>
-    @else
-      <div class="col-12 text-center py-5">
-        <div class="empty-state p-4 bg-light rounded">
-          <i class="fas fa-search fa-3x text-muted mb-3"></i>
-          <h3>No properties found</h3>
-          <p class="text-muted">Try adjusting your search criteria or check back later for new listings.</p>
-          <a href="{{ route('properties.index') }}" class="btn btn-primary mt-3">Clear filters</a>
-        </div>
+    
+    <!-- Display success message if any -->
+    @if(session('success'))
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     @endif
+    @if($properties->count() > 0)
+  <div class="row">
+    @foreach($properties as $property)
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100 shadow-sm property-card">
+        <div class="position-relative">
+          @php
+            $primaryImage = $property->images->where('is_primary', true)->first();
+            $fallbackImage = $property->images->first();
+            $imagePath = asset('images/default-property.jpg');
+            
+            if ($primaryImage && $primaryImage->image_path) {
+              $imagePath = asset('storage/' . $primaryImage->image_path);
+            } elseif ($fallbackImage && $fallbackImage->image_path) {
+              $imagePath = asset('storage/' . $fallbackImage->image_path);
+            }
+          @endphp
+          
+          <img src="{{ $imagePath }}" class="card-img-top" alt="{{ $property->title }}" style="height: 200px; object-fit: cover;">
+          <!-- This will display for both logged in and logged out users with the same styling -->
+<div style="position: absolute; top: 15px; right: 15px; z-index: 5;">
+  @if(Auth::check())
+    @php
+      $isFavorite = DB::table('favorites')
+        ->where('user_id', Auth::id())
+        ->where('property_id', $property->id)
+        ->exists();
+    @endphp
+    <form action="{{ route('favorites.toggle') }}" method="POST" class="favorite-form">
+      @csrf
+      <input type="hidden" name="property_id" value="{{ $property->id }}">
+      <button type="submit" class="btn btn-light rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        @if($isFavorite)
+          <i class="fas fa-heart text-danger"></i>
+        @else
+          <i class="far fa-heart"></i>
+        @endif
+      </button>
+    </form>
+  @else
+    <a href="{{ route('login') }}" class="btn btn-light rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+      <i class="far fa-heart"></i>
+    </a>
+  @endif
+</div>
+          
+          <div class="position-absolute bottom-0 start-0 m-2">
+            <span class="badge  p-2" style="background-color:rgb(166, 0, 0); ">{{ number_format($property->price) }} JOD</span>
+          </div>
+          
+            <div class="position-absolute top-0 start-0 m-2">
+            @if($property->purpose == 'sale')
+              <span class="badge bg-primary">For Sale</span>
+            @else
+              <span class="badge bg-info">For Rent</span>
+            @endif
+            </div>
+        </div>
+        
+        <div class="card-body">
+          <h5 class="card-title">{{ $property->title }}</h5>
+          <p class="card-text text-muted small">
+            <i class="fas fa-map-marker-alt me-1"></i> {{ $property->address }}
+          </p>
+          <div class="property-features d-flex justify-content-between mb-3">
+            <span><i class="fas fa-bed text-primary me-1"></i> {{ $property->bedrooms ?? '0' }} Beds</span>
+            <span><i class="fas fa-bath text-primary me-1"></i> {{ $property->bathrooms ?? '0' }} Baths</span>
+            <span><i class="fas fa-ruler-combined text-primary me-1"></i> {{ $property->size }} sq.ft</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <a href="{{ route('properties.show', $property->id) }}" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-eye me-1"></i> View Details
+            </a>
+            <span class="property-date small text-muted align-self-center">
+              <i class="far fa-calendar-alt me-1"></i> {{ $property->created_at->diffForHumans() }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="card-footer bg-white text-muted small">
+          <div class="d-flex justify-content-between">
+            <span><i class="fas fa-map me-1"></i> {{ $property->area->name ?? 'N/A' }}</span>
+            @if($property->is_featured)
+              <span><i class="fas fa-star text-warning me-1"></i> Featured</span>
+            @endif
+          </div>
+        </div>
+      </div>
+    </div>
+    @endforeach
+  </div>
+@else
+  <div class="col-12 text-center py-5">
+    <div class="empty-state p-4 bg-light rounded">
+      <i class="fas fa-search fa-3x text-muted mb-3"></i>
+      <h3>No properties found</h3>
+      <p class="text-muted">Try adjusting your search criteria or check back later for new listings.</p>
+      <a href="{{ route('properties.index') }}" class="btn btn-primary mt-3">Clear filters</a>
+    </div>
+  </div>
+@endif
     
     <!-- Pagination -->
     <div class="row align-items-center py-5">
@@ -191,10 +189,67 @@ use Illuminate\Support\Facades\Auth;
     </div>
   </div>
 </div>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 @push('styles')
 <style>
+
+
+  /* Wishlist button styles */
+  .wishlist-button {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    top: 15px;
+    right: 15px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 3;
+    transition: all 0.3s ease;
+    opacity: 1 !important; /* جعل الزر مرئي دائمًا للاختبار */
+    transform: translateY(-10px);
+  }
+
+  .property-item:hover .wishlist-button {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .wishlist-icon {
+    color: #888;
+    font-size: 18px;
+    transition: all 0.3s ease;
+  }
+
+  .wishlist-button:hover .wishlist-icon,
+  .wishlist-icon.active {
+    color: #fd4d40;
+  }
+
+  .wishlist-button .wishlist-icon.active {
+    opacity: 1;
+  }
+
+  .property-item .wishlist-button.has-favorite {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* تنسيق نموذج المفضلة */
+  .favorite-form {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* باقي التنسيقات كما هي */
   .property-search-form {
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: 8px;
@@ -299,43 +354,6 @@ use Illuminate\Support\Facades\Auth;
     line-height: 1;
   }
   
-  /* Wishlist Button */
-  .wishlist-button {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: white;
-    border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    z-index: 3;
-    transition: all 0.3s ease;
-  }
-  
-  .wishlist-button:hover {
-    transform: scale(1.1);
-  }
-  
-  .wishlist-icon {
-    color: #ccc;
-    font-size: 18px;
-    transition: all 0.3s ease;
-  }
-  
-  .wishlist-button:hover .wishlist-icon {
-    color: #fd4d40;
-  }
-  
-  .wishlist-icon.active {
-    color: #fd4d40;
-  }
-  
   /* Pagination styling */
   .custom-pagination .pagination {
     justify-content: center;
@@ -361,3 +379,5 @@ use Illuminate\Support\Facades\Auth;
   }
 </style>
 @endpush
+
+@endsection

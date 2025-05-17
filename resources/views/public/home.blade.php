@@ -27,232 +27,254 @@
         Easiest way to find your dream home
       </h1>
       <form action="{{ route('properties.index') }}" method="GET" class="property-search-form mt-5" data-aos="fade-up" data-aos-delay="200">
-        <div class="search-container bg-white rounded-lg shadow p-4">
-          <!-- Main Search Filters Row -->
-          <div class="row g-3 mb-3">
-            <!-- Property Type -->
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label small text-muted">Property Type</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-building text-primary"></i>
-                  </span>
-                  <select class="form-select border-start-0" name="property_type">
-                    <option value="">All Types</option>
-                    @php
-                      $propertyTypes = App\Models\PropertyType::all();
-                    @endphp
-                    @foreach($propertyTypes as $type)
-                      <option value="{{ $type->id }}">{{ $type->name }}</option>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+  <div class="search-container bg-white rounded-lg shadow p-4">
+    <!-- Main Search Filters Row -->
+    <div class="row g-3 mb-3">
+      <!-- Property Type -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Property Type</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-building text-primary"></i>
+            </span>
+            <select class="form-select border-start-0" name="property_type">
+              <option value="">All Types</option>
+              @php
+                $propertyTypes = App\Models\PropertyType::all();
+              @endphp
+              @foreach($propertyTypes as $type)
+                <option value="{{ $type->id }}" {{ request('property_type') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Location - Enhanced with Governorate and Area -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Location</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-map-marker-alt text-primary"></i>
+            </span>
+            <select class="form-select border-start-0" id="governorate" name="governorate_id">
+              <option value="">All Governorates</option>
+              @php
+                $governorates = App\Models\Governorate::orderBy('name')->get();
+              @endphp
+              @foreach($governorates as $governorate)
+                <option value="{{ $governorate->id }}" {{ request('governorate_id') == $governorate->id ? 'selected' : '' }}>{{ $governorate->name }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Areas based on selected governorate -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Area</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-map text-primary"></i>
+            </span>
+            <select class="form-select border-start-0" id="area" name="area_id">
+              <option value="">All Areas</option>
+              @php
+                $selectedGovernorate = request('governorate_id');
+                $areas = $selectedGovernorate ? App\Models\Area::where('governorate_id', $selectedGovernorate)->orderBy('name')->get() : App\Models\Area::orderBy('name')->get();
+              @endphp
+              @foreach($areas as $area)
+                <option value="{{ $area->id }}" {{ request('area_id') == $area->id ? 'selected' : '' }} data-governorate="{{ $area->governorate_id }}">{{ $area->name }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Second row with Purpose -->
+    <div class="row g-3 mb-3">
+      <!-- Purpose -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Purpose</label>
+          <div class="d-flex">
+            <div class="form-check form-check-inline flex-grow-1">
+              <input class="form-check-input" type="radio" name="purpose" id="purposeBuy" value="sale" {{ request('purpose') != 'rent' ? 'checked' : '' }}>
+              <label class="form-check-label d-flex align-items-center justify-content-center bg-light rounded p-2 w-100" for="purposeBuy">
+                <i class="fas fa-tag me-2 text-primary"></i> Buy
+              </label>
             </div>
-            
-            <!-- Location -->
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label small text-muted">Location</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-map-marker-alt text-primary"></i>
-                  </span>
-                  <select class="form-select border-start-0" name="area_id">
-                    <option value="">All Locations</option>
-                    @php
-                      $areas = App\Models\Area::all();
-                    @endphp
-                    @foreach($areas as $area)
-                      <option value="{{ $area->id }}">{{ $area->name }}</option>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+            <div class="form-check form-check-inline flex-grow-1">
+              <input class="form-check-input" type="radio" name="purpose" id="purposeRent" value="rent" {{ request('purpose') == 'rent' ? 'checked' : '' }}>
+              <label class="form-check-label d-flex align-items-center justify-content-center bg-light rounded p-2 w-100" for="purposeRent">
+                <i class="fas fa-calendar-alt me-2 text-primary"></i> Rent
+              </label>
             </div>
-            
-            <!-- Purpose -->
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label small text-muted">Purpose</label>
-                <div class="d-flex">
-                  <div class="form-check form-check-inline flex-grow-1">
-                    <input class="form-check-input" type="radio" name="purpose" id="purposeBuy" value="sale" checked>
-                    <label class="form-check-label d-flex align-items-center justify-content-center bg-light rounded p-2 w-100" for="purposeBuy">
-                      <i class="fas fa-tag me-2 text-primary"></i> Buy
-                    </label>
-                  </div>
-                  <div class="form-check form-check-inline flex-grow-1">
-                    <input class="form-check-input" type="radio" name="purpose" id="purposeRent" value="rent">
-                    <label class="form-check-label d-flex align-items-center justify-content-center bg-light rounded p-2 w-100" for="purposeRent">
-                      <i class="fas fa-calendar-alt me-2 text-primary"></i> Rent
-                    </label>
-                  </div>
-                </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Price Range -->
+      <div class="col-md-8">
+        <div class="form-group">
+          <label class="form-label small text-muted">Price Range (JOD)</label>
+          <div class="d-flex gap-2">
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="fas fa-coins text-primary"></i>
+              </span>
+              <input type="number" class="form-control border-start-0" name="min_price" placeholder="Min" 
+                     value="{{ request('min_price') }}" min="0" oninput="this.value = Math.abs(this.value)">
+            </div>
+            <div class="input-group">
+              <span class="input-group-text bg-white border-end-0">
+                <i class="fas fa-coins text-primary"></i>
+              </span>
+              <input type="number" class="form-control border-start-0" name="max_price" placeholder="Max" 
+                     value="{{ request('max_price') }}" min="0" oninput="this.value = Math.abs(this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Third row with Beds and Baths -->
+    <div class="row g-3 mb-3">
+      <!-- Bedrooms -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Bedrooms</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-bed text-primary"></i>
+            </span>
+            <select class="form-select border-start-0" name="bedrooms">
+              <option value="">Any</option>
+              @for($i = 1; $i <= 6; $i++)
+                <option value="{{ $i }}" {{ request('bedrooms') == $i ? 'selected' : '' }}>{{ $i }}+</option>
+              @endfor
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bathrooms -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Bathrooms</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-bath text-primary"></i>
+            </span>
+            <select class="form-select border-start-0" name="bathrooms">
+              <option value="">Any</option>
+              @for($i = 1; $i <= 5; $i++)
+                <option value="{{ $i }}" {{ request('bathrooms') == $i ? 'selected' : '' }}>{{ $i }}+</option>
+              @endfor
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Property Size -->
+      <div class="col-md-4">
+        <div class="form-group">
+          <label class="form-label small text-muted">Area (sq.ft)</label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-ruler-combined text-primary"></i>
+            </span>
+            <input type="number" class="form-control border-start-0" name="min_size" placeholder="Min Size" 
+                   value="{{ request('min_size') }}" min="0" oninput="this.value = Math.abs(this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Keywords and Search Button Row -->
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100 py-3">
+          <i class="fas fa-search me-2"></i> Find Properties
+        </button>
+      </div>
+    </div>
+    
+    <!-- Advanced Filters Toggle -->
+    <div class="text-center mt-3">
+      <a href="#advancedFilters" data-bs-toggle="collapse" class="text-decoration-none small">
+        <i class="fas fa-sliders-h me-1"></i> Advanced Filters
+        <i class="fas fa-chevron-down ms-1 small"></i>
+      </a>
+    </div>
+    
+    <!-- Advanced Filters Collapsible Section -->
+    <div class="collapse mt-3" id="advancedFilters">
+      <div class="card card-body border-0 bg-light">
+        <div class="row g-3">
+          <!-- Property Size - Max -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label small text-muted">Max Area (sq.ft)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="fas fa-ruler-combined text-primary"></i>
+                </span>
+                <input type="number" class="form-control border-start-0" name="max_size" placeholder="Max Size" 
+                       value="{{ request('max_size') }}" min="0" oninput="this.value = Math.abs(this.value)">
               </div>
             </div>
           </div>
           
-          <!-- Advanced Filters Row -->
-          <div class="row g-3 mb-3">
-            <!-- Price Range -->
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label small text-muted">Price Range (JOD)</label>
-                <div class="d-flex gap-2">
-                  <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                      <i class="fas fa-coins text-primary"></i>
-                    </span>
-                    <input type="number" class="form-control border-start-0" name="min_price" placeholder="Min">
-                  </div>
-                  <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                      <i class="fas fa-coins text-primary"></i>
-                    </span>
-                    <input type="number" class="form-control border-start-0" name="max_price" placeholder="Max">
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Bedrooms -->
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label small text-muted">Bedrooms</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-bed text-primary"></i>
-                  </span>
-                  <select class="form-select border-start-0" name="bedrooms">
-                    <option value="">Any</option>
-                    <option value="1">1+</option>
-                    <option value="2">2+</option>
-                    <option value="3">3+</option>
-                    <option value="4">4+</option>
-                    <option value="5">5+</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Bathrooms -->
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label small text-muted">Bathrooms</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-bath text-primary"></i>
-                  </span>
-                  <select class="form-select border-start-0" name="bathrooms">
-                    <option value="">Any</option>
-                    <option value="1">1+</option>
-                    <option value="2">2+</option>
-                    <option value="3">3+</option>
-                    <option value="4">4+</option>
-                  </select>
-                </div>
+          <!-- Year Built -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label small text-muted">Year Built</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="fas fa-calendar-alt text-primary"></i>
+                </span>
+                <select class="form-select border-start-0" name="year_built">
+                  <option value="">Any Year</option>
+                  @for ($year = date('Y'); $year >= 1990; $year--)
+                    <option value="{{ $year }}" {{ request('year_built') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                  @endfor
+                </select>
               </div>
             </div>
           </div>
           
-          <!-- Keywords and Search Button Row -->
-          <div class="row g-3 align-items-end">
-            <div class="col-md-8">
-              <div class="form-group">
-                <label class="form-label small text-muted">Keywords</label>
-                <div class="input-group">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-search text-primary"></i>
-                  </span>
-                  <input type="text" class="form-control border-start-0" name="search" placeholder="Search by title, address, description...">
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <button type="submit" class="btn btn-primary w-100 py-3">
-                <i class="fas fa-search me-2"></i> Find Properties
-              </button>
-            </div>
-          </div>
-          
-          <!-- Advanced Filters Toggle -->
-          <div class="text-center mt-3">
-            <a href="#advancedFilters" data-bs-toggle="collapse" class="text-decoration-none small">
-              <i class="fas fa-sliders-h me-1"></i> Advanced Filters
-              <i class="fas fa-chevron-down ms-1 small"></i>
-            </a>
-          </div>
-          
-          <!-- Advanced Filters Collapsible Section -->
-          <div class="collapse mt-3" id="advancedFilters">
-            <div class="card card-body border-0 bg-light">
-              <div class="row g-3">
-                <!-- Property Size -->
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label class="form-label small text-muted">Area (sq.ft)</label>
-                    <div class="d-flex gap-2">
-                      <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                          <i class="fas fa-ruler-combined text-primary"></i>
-                        </span>
-                        <input type="number" class="form-control border-start-0" name="min_size" placeholder="Min">
-                      </div>
-                      <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                          <i class="fas fa-ruler-combined text-primary"></i>
-                        </span>
-                        <input type="number" class="form-control border-start-0" name="max_size" placeholder="Max">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Year Built -->
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label class="form-label small text-muted">Year Built</label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-white border-end-0">
-                        <i class="fas fa-calendar-alt text-primary"></i>
-                      </span>
-                      <select class="form-select border-start-0" name="year_built">
-                        <option value="">Any Year</option>
-                        @for ($year = date('Y'); $year >= 1990; $year--)
-                          <option value="{{ $year }}">{{ $year }}</option>
-                        @endfor
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Features -->
-                <div class="col-md-4">
-                  <div class="form-group">
-                    <label class="form-label small text-muted">Features</label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-white border-end-0">
-                        <i class="fas fa-star text-primary"></i>
-                      </span>
-                      <select class="form-select border-start-0" name="feature_id">
-                        <option value="">Any Features</option>
-                        @php
-                          $features = App\Models\Feature::all();
-                        @endphp
-                        @foreach($features as $feature)
-                          <option value="{{ $feature->id }}">{{ $feature->name }}</option>
-                        @endforeach
-                      </select>
-                    </div>
-                  </div>
-                </div>
+          <!-- Features -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label class="form-label small text-muted">Features</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="fas fa-star text-primary"></i>
+                </span>
+                <select class="form-select border-start-0" name="feature_id">
+                  <option value="">Any Features</option>
+                  @php
+                    $features = App\Models\Feature::all();
+                  @endphp
+                  @foreach($features as $feature)
+                    <option value="{{ $feature->id }}" {{ request('feature_id') == $feature->id ? 'selected' : '' }}>{{ $feature->name }}</option>
+                  @endforeach
+                </select>
               </div>
             </div>
           </div>
         </div>
-      </form>
+      </div>
+    </div>
+  </div>
+</form>
+
+
     </div>
   </div>
 </div>
@@ -799,6 +821,103 @@
     </div>
   </div>
 </div>
+</div> <!-- نهاية hero section -->
+
+
+@push('scripts')
+<script>
+// JavaScript to prevent negative values
+document.addEventListener('DOMContentLoaded', function() {
+    const numberInputs = document.querySelectorAll('input[type="number"][min="0"]');
+    
+    numberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value < 0) {
+                this.value = 0;
+            }
+        });
+    });
+
+    // Governorate-Area dynamic dropdown
+    const governorateSelect = document.getElementById('governorate');
+    const areaSelect = document.getElementById('area');
+
+    if (governorateSelect && areaSelect) {
+        governorateSelect.addEventListener('change', function() {
+            const governorateId = this.value;
+            const areaOptions = areaSelect.querySelectorAll('option');
+            
+            areaOptions.forEach(option => {
+                if (option.value === "" || option.dataset.governorate === governorateId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            areaSelect.value = "";
+        });
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+  const governorateSelect = document.getElementById('governorate');
+  const areaSelect = document.getElementById('area');
+  
+  // نسخ جميع خيارات المناطق في مصفوفة للاستخدام لاحقًا
+  const areaOptions = Array.from(areaSelect.options);
+  
+  // دالة لتصفية المناطق بناءً على المحافظة المختارة
+  function filterAreas() {
+    const selectedGovernorate = governorateSelect.value;
+    
+    // مسح الخيارات الحالية
+    areaSelect.innerHTML = '';
+    
+    // إضافة خيار "كل المناطق"
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = 'All Areas';
+    areaSelect.appendChild(allOption);
+    
+    // تصفية وإضافة المناطق ذات الصلة
+    if (selectedGovernorate) {
+      // إضافة المناطق التابعة للمحافظة المختارة فقط
+      areaOptions
+        .filter(option => option.dataset.governorate === selectedGovernorate || option.value === '')
+        .forEach(option => {
+          areaSelect.appendChild(option.cloneNode(true));
+        });
+    } else {
+      // إضافة جميع المناطق إذا لم يتم اختيار محافظة
+      areaOptions.forEach(option => {
+        areaSelect.appendChild(option.cloneNode(true));
+      });
+    }
+    
+    // استعادة المنطقة المحددة مسبقًا إذا كانت تطابق المحافظة الحالية
+    const previouslySelectedArea = "{{ request('area_id') }}";
+    if (previouslySelectedArea) {
+      // التحقق مما إذا كانت المنطقة المحددة مسبقًا صالحة للمحافظة الحالية
+      const matchingOption = areaOptions.find(option => 
+        option.value === previouslySelectedArea && 
+        (!selectedGovernorate || option.dataset.governorate === selectedGovernorate)
+      );
+      
+      if (matchingOption) {
+        areaSelect.value = previouslySelectedArea;
+      }
+    }
+  }
+  
+  // التصفية الأولية
+  filterAreas();
+  
+  // إضافة مستمع حدث للتغيير
+  governorateSelect.addEventListener('change', filterAreas);
+});
+</script>
+@endpush
+
 
 
 @endsection

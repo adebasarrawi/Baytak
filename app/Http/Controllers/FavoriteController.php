@@ -41,20 +41,14 @@ class FavoriteController extends Controller
         if ($favorite) {
             // If already favorited, remove from favorites
             $favorite->delete();
-            return response()->json([
-                'status' => 'removed',
-                'message' => 'Property removed from favorites'
-            ]);
+            return redirect()->back()->with('success', 'Property removed from favorites');
         } else {
             // If not favorited, add to favorites
             Favorite::create([
                 'user_id' => $userId,
                 'property_id' => $propertyId
             ]);
-            return response()->json([
-                'status' => 'added',
-                'message' => 'Property added to favorites'
-            ]);
+            return redirect()->back()->with('success', 'Property added to favorites');
         }
     }
 
@@ -67,12 +61,10 @@ class FavoriteController extends Controller
     {
         $user = Auth::user();
         
-        // Get favorite properties using a direct query instead of relationship
-        $favorites = Property::whereIn('id', function($query) use ($user) {
-            $query->select('property_id')
-                  ->from('favorites')
-                  ->where('user_id', $user->id);
-        })->paginate(12);
+        // جلب سجلات المفضلة مع علاقة العقار
+        $favorites = Favorite::with('property')
+            ->where('user_id', $user->id)
+            ->paginate(12);
         
         return view('favorites.index', compact('favorites'));
     }

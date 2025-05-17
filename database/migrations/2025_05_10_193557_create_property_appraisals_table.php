@@ -24,7 +24,7 @@ class CreatePropertyAppraisalsTable extends Migration
             $table->date('appointment_date');
             $table->time('appointment_time');
             $table->text('additional_notes')->nullable();
-            $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'confirmed',  'cancelled'])->default('pending');
             $table->timestamps();
         });
     }
