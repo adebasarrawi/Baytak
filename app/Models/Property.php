@@ -3,10 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; 
+
 
 class Property extends Model
 {
+    public function getRouteKeyName()
+    {
+        return 'id';
+    }
+    use SoftDeletes;
+    protected $dates = ['deleted_at', 'archived_at'];
+
     protected $fillable = [
+        
         'user_id',
         'title',
         'description',
@@ -29,28 +39,41 @@ class Property extends Model
         'year_built',
         'floors',
         'views',
-        'rejection_reason'
-    ];
+        'rejection_reason',
+        'archived_at',
+        'deleted_at',
 
-    // علاقة العقار بنوع العقار
+    ];
+    public function delete()
+    {
+        $this->update(['status' => 'removed']);
+        
+        return parent::delete();
+    }
+
+    protected $casts = [
+        'archived_at' => 'datetime',
+    ];
+    
+
     public function type()
     {
         return $this->belongsTo(PropertyType::class, 'property_type_id');
     }
 
-    // علاقة العقار بالمنطقة
     public function area()
     {
         return $this->belongsTo(Area::class);
     }
 
-    // علاقة العقار بالمستخدم
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withDefault([
+            'name' => 'User Deleted',
+            'email' => 'N/A'
+        ]);
     }
 
-    // علاقة العقار بالميزات (Many-to-Many)
     public function features()
     {
         return $this->belongsToMany(Feature::class, 'property_feature');
@@ -70,7 +93,6 @@ class Property extends Model
         return $this->belongsToMany(User::class, 'favorites', 'property_id', 'user_id')->withTimestamps();
     }
 
-    // نطاقات البحث
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
@@ -86,7 +108,6 @@ class Property extends Model
         return $query->where('status', 'rejected');
     }
 
-    // نطاق البحث حسب المنطقة
     public function scopeArea($query, $areaId)
     {
         if ($areaId) {
@@ -95,7 +116,6 @@ class Property extends Model
         return $query;
     }
 
-    // نطاق البحث حسب الميزات
     public function scopeWithFeatures($query, $featureIds)
     {
         if (!empty($featureIds)) {
@@ -106,7 +126,6 @@ class Property extends Model
         return $query;
     }
 
-    // نطاق البحث حسب السعر
     public function scopePriceRange($query, $minPrice, $maxPrice)
     {
         if ($minPrice >= 0) {
@@ -119,8 +138,8 @@ class Property extends Model
         
         return $query;
     }
+    
 
-    // نطاق البحث حسب المساحة
     public function scopeSizeRange($query, $minSize, $maxSize)
     {
         if ($minSize >= 0) {

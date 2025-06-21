@@ -10243,6 +10243,203 @@ textarea {
     .property-item .property-content .specs .caption {
       font-size: 13px; }
 
+      .sec-testimonials {
+        background-color: #f8f9fa;
+        padding: 80px 0;
+        position: relative;
+      }
+      
+      /* تنسيق بطاقة التيستمونيال - هيكل جديد أكثر صلابة */
+      .testimonial {
+        background-color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+      }
+      
+      .testimonial:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      }
+      
+      /* تقسيم التيستمونيال إلى ثلاثة أقسام (هيدر، بودي، فوتر) */
+      .testimonial-header {
+        text-align: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+      
+      .testimonial-body {
+        flex-grow: 1;
+        position: relative;
+        margin: 0 -10px;
+        padding: 0 10px;
+        overflow: visible;  /* هذا مهم لعلامات الاقتباس */
+      }
+      
+      .testimonial-footer {
+        text-align: center;
+        padding-top: 10px;
+        margin-top: auto;
+      }
+      
+      /* عناصر الهيدر */
+      .avatar-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0 auto 10px;
+      }
+      
+      .testimonial-rating {
+        margin: 10px 0;
+        font-size: 18px;
+      }
+      
+      .testimonial-name {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #333;
+      }
+      
+      .testimonial-area {
+        margin: 8px 0;
+      }
+      
+      .area-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        background-color: #f1f8f6;
+        color: #3b5d50;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid rgba(59, 93, 80, 0.2);
+      }
+      
+      /* نص التيستمونيال مع علامات اقتباس */
+      .testimonial-text {
+        position: relative;
+        font-style: italic;
+        color: #666;
+        line-height: 1.6;
+        padding: 0 25px;
+        margin: 0;
+        text-align: center;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        /* السطور التالية حل مشكلة النص الطويل */
+        display: block;
+        max-height: none;
+        overflow: visible;
+        text-overflow: clip;
+      }
+      
+      .testimonial-text::before,
+      .testimonial-text::after {
+        font-family: Georgia, serif;
+        font-size: 50px;
+        position: absolute;
+        color: rgba(59, 93, 80, 0.1);
+        line-height: 0;
+      }
+      
+      .testimonial-text::before {
+        content: '\201C';
+        left: -5px;
+        top: 15px;
+      }
+      
+      .testimonial-text::after {
+        content: '\201D';
+        right: -5px;
+        bottom: -10px;
+      }
+      
+      /* المهنة في الفوتر */
+      .testimonial-position {
+        color: #888;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      /* تنسيق أزرار التنقل */
+      #testimonial-nav {
+        font-size: 14px;
+      }
+      
+      #testimonial-nav span {
+        display: inline-block;
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        margin-left: 5px;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      
+      #testimonial-nav span:hover {
+        background-color: #3b5d50;
+        color: white;
+        border-color: #3b5d50;
+      }
+      
+      /* تنسيق زر المشاركة */
+      .btn-primary {
+        background-color: #3b5d50;
+        border-color: #3b5d50;
+        border-radius: 50px;
+        transition: all 0.3s;
+      }
+      
+      .btn-primary:hover {
+        background-color: #2d4a3e;
+        border-color: #2d4a3e;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(59, 93, 80, 0.2);
+      }
+      
+      /* تحسينات للجوال */
+      @media (max-width: 767px) {
+        .testimonial {
+          padding: 20px 15px;
+        }
+        
+        .testimonial-text {
+          font-size: 15px;
+          padding: 0 20px;
+        }
+        
+        .testimonial-text::before {
+          font-size: 40px;
+          left: -5px;
+        }
+        
+        .testimonial-text::after {
+          font-size: 40px;
+          right: -5px;
+        }
+        
+        .avatar-circle {
+          width: 60px;
+          height: 60px;
+          font-size: 24px;
+        }
+      }
 .slider-nav {
   margin-top: -100px;
   position: relative; }

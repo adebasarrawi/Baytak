@@ -5,46 +5,47 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
         'email',
         'password',
         'phone',
-        'role',
         'user_type',
         'profile_image',
         'bio',
         'address',
-        // إضافة الحقول الجديدة للتحقق من البريد
         'email_verification_code',
         'email_verification_expires_at',
-        'email_verified_at'
+        'email_verified_at',
+        'status'
     ];
-
-   
 
     protected $hidden = [
         'password',
         'remember_token',
-        'email_verification_code' // إخفاء كود التحقق
+        'email_verification_code'
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'email_verification_expires_at' => 'datetime'
+        'email_verification_expires_at' => 'datetime',
+        'deleted_at' => 'datetime'
     ];
 
-    // الميثود الموجودة
+    protected $dates = ['deleted_at'];
+
+    // Existing methods
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return $this->user_type === 'admin';
     }
 
     public function isSeller()
@@ -52,13 +53,11 @@ class User extends Authenticatable
         return $this->user_type === 'seller';
     }
 
-    // ميثود للتحقق من البريد
     public function hasVerifiedEmail()
     {
         return $this->email_verified_at !== null;
     }
 
-    // توليد كود التحقق
     public function generateVerificationCode()
     {
         $this->email_verification_code = sprintf("%06d", mt_rand(1, 999999));
@@ -68,15 +67,12 @@ class User extends Authenticatable
         return $this->email_verification_code;
     }
 
-    // التحقق من صحة كود التفعيل
     public function verifyEmailCode($code)
     {
-        // التحقق من الكود وعدم انتهاء صلاحيته
-        return $this->email_verification_code === $code && 
-               $this->email_verification_expires_at > now();
+        return $this->email_verification_code === $code &&
+                $this->email_verification_expires_at > now();
     }
 
-    // تفعيل البريد الإلكتروني
     public function markEmailAsVerified()
     {
         $this->email_verified_at = now();
@@ -85,7 +81,23 @@ class User extends Authenticatable
         $this->save();
     }
 
-    // العلاقات الموجودة
+    // Status methods
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    public function activate()
+    {
+        $this->update(['status' => 'active']);
+    }
+
+    public function deactivate()
+    {
+        $this->update(['status' => 'inactive']);
+    }
+
+    // Relationships
     public function properties()
     {
         return $this->hasMany(Property::class);
@@ -95,12 +107,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
-  
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class);
     }
-    
+
     public function favoriteProperties()
     {
         return $this->belongsToMany(Property::class, 'favorites', 'user_id', 'property_id')->withTimestamps();
@@ -115,16 +127,30 @@ class User extends Authenticatable
     {
         return $this->hasMany(PaymentTransaction::class);
     }
-    public function appraisals()
-{
-    return $this->hasMany(PropertyAppraisal::class);
-}
 
-/**
- * Get all appraisals where the user is an appraiser.
- */
-public function appraisalsAsAppraiser()
-{
-    return $this->hasMany(PropertyAppraisal::class, 'appraiser_id');
-}
+    public function appraisals()
+    {
+        return $this->hasMany(PropertyAppraisal::class);
+    }
+
+    public function appraisalsAsAppraiser()
+    {
+        return $this->hasMany(PropertyAppraisal::class, 'appraiser_id');
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    // Password mutator
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = Hash::make($value);
+    }
 }

@@ -15,6 +15,8 @@ class CreatePaymentsTable extends Migration
             $table->string('card_number');
             $table->string('expiry_date');
             $table->string('cvc');
+            $table->timestamp('subscription_expires_at')->nullable(); 
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }

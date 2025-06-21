@@ -61,11 +61,22 @@ class ProfileController extends Controller
             
             // Delete old image if exists
             if ($currentUser->profile_image) {
-                Storage::disk('public')->delete($currentUser->profile_image);
+                $oldImagePath = 'public/' . $currentUser->profile_image;
+                if (Storage::exists($oldImagePath)) {
+                    Storage::delete($oldImagePath);
+                }
             }
             
+            // Create directory if it doesn't exist
+            if (!Storage::disk('public')->exists('profile-images')) {
+                Storage::disk('public')->makeDirectory('profile-images');
+            }
+            
+            // Generate unique filename
+            $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            
             // Store the new image in the public storage
-            $imagePath = $image->store('profile-images', 'public');
+            $imagePath = $image->storeAs('profile-images', $filename, 'public');
             $updateData['profile_image'] = $imagePath;
         }
 
@@ -74,7 +85,7 @@ class ProfileController extends Controller
             ->where('id', Auth::id())
             ->update($updateData);
 
-        return redirect()->route('profile')->with('success', 'Profile updated successfully!');
+        return redirect()->route('profile.edit')->with('success', 'Profile updated successfully!');
     }
 
     /**
@@ -105,6 +116,6 @@ class ProfileController extends Controller
                 'password' => Hash::make($request->password)
             ]);
 
-        return redirect()->route('profile')->with('success', 'Password changed successfully!');
+        return redirect()->route('profile.edit')->with('success', 'Password changed successfully!');
     }
 }

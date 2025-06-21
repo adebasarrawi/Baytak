@@ -16,7 +16,10 @@ class Appraiser extends Model
         'specialty',
         'availability',
         'hourly_rate',
-        'rating'
+        'rating',
+        'profile_image',
+        'bio',
+        'certification'
     ];
 
     /**
@@ -25,5 +28,32 @@ class Appraiser extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the appraiser's profile image URL
+     */
+    public function getProfileImageUrlAttribute()
+    {
+        if ($this->profile_image) {
+            return asset('storage/' . $this->profile_image);
+        }
+        return asset('images/default-avatar.jpg');
+    }
+
+    /**
+     * Get the appraiser's name from the user relationship
+     */
+    public function getNameAttribute()
+    {
+        return $this->user ? $this->user->name : 'Unknown';
+    }
+
+    /**
+     * Get the appraiser's email from the user relationship
+     */
+    public function getEmailAttribute()
+    {
+        return $this->user ? $this->user->email : '';
     }
 }

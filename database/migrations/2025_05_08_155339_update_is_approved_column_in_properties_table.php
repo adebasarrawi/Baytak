@@ -14,7 +14,6 @@ class UpdateIsApprovedColumnInPropertiesTable extends Migration
     public function up()
     {
         Schema::table('properties', function (Blueprint $table) {
-            // تعديل العمود is_approved ليسمح بقيمة null
             $table->boolean('is_approved')->nullable()->change();
         });
     }

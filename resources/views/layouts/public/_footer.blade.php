@@ -21,6 +21,9 @@
                     <li><a href="{{ url('/services') }}">Services</a></li>
                     <li><a href="{{ url('/properties') }}">Properties</a></li>
                     <li><a href="{{ url('/contact') }}">Contact</a></li>
+                    <li><a href="{{ url('/property-estimation') }}">Quick Property Estimate
+</a></li>
+                    <a href="{{ route('testimonials.form') }}" class="text-decoration-none">Share Your Experience</a>
                 </ul>
             </div>
             <div class="col-lg-2 col-md-6 footer-section">

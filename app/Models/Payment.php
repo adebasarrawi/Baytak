@@ -21,6 +21,20 @@ class Payment extends Model
         'expiry_date',
         'cvc',
         'subscription',
+        'subscription_expires_at',
+        'active'
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'subscription_expires_at' => 'datetime',
+        'active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     /**

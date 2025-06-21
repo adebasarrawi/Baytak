@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PropertyController extends Controller
 {
@@ -46,9 +47,9 @@ class PropertyController extends Controller
      */
     public function index(Request $request)
     {
-        // Base query with eager loading for performance
         $query = Property::with(['type', 'area.governorate', 'images', 'features', 'user'])
-            ->where('status', 'approved'); // Only show approved properties
+        ->where('status', 'approved')
+        ->whereNotIn('status', ['archived', 'removed']);
         
         // Apply filters based on request parameters
         
@@ -157,11 +158,14 @@ class PropertyController extends Controller
     /**
      * Show property details
      *
-     * @param  \App\Models\Property  $property
+     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function show(Property $property)
+    public function show($id)
     {
+        // Find the property by ID
+        $property = Property::findOrFail($id);
+        
         // Load relationships for the property
         $property->load(['type', 'area.governorate', 'images', 'features', 'user']);
         
@@ -173,7 +177,7 @@ class PropertyController extends Controller
         // Increment view counter
         $property->increment('views');
         
-        // Get similar properties based on area and property type
+        // Get similar properties
         $similarProperties = Property::with(['images', 'area'])
             ->where('id', '!=', $property->id)
             ->where('status', 'approved')
@@ -185,7 +189,7 @@ class PropertyController extends Controller
             ->take(3)
             ->get();
         
-        return view('properties.show', compact('property', 'similarProperties'));
+        return view('public.property-single', compact('property', 'similarProperties'));
     }
     
     /**
@@ -280,8 +284,8 @@ class PropertyController extends Controller
             'address' => $validated['address'],
             'purpose' => $validated['purpose'],
             'slug' => Str::slug($validated['title'] . '-' . uniqid()),
-            'status' => 'pending', // Set status to pending
-            'is_featured' => false
+            'status' => 'pending',
+            'is_featured' => false,
         ]);
         
         // Attach features if provided
@@ -289,7 +293,7 @@ class PropertyController extends Controller
             $property->features()->attach($request->features);
         }
         
-        // Process uploaded images - first image will be primary
+        // Process uploaded images
         if ($request->hasFile('images')) {
             $this->uploadPropertyImages($property, $request->file('images'));
         }
@@ -301,53 +305,111 @@ class PropertyController extends Controller
     /**
      * Show form to edit property
      *
-     * @param  \App\Models\Property  $property
+     * @param  int  $id
      * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
-    public function edit(Property $property)
+    
+
+   
+    
+    public function edit($id)
     {
-        // Check if current user is authorized to edit this property
-        if (!$this->canManageProperty($property)) {
-            return redirect()->route('properties.index')
-                ->with('error', 'You are not authorized to edit this property.');
+        try {
+            // Find the property by ID
+            $property = Property::findOrFail($id);
+            
+            Log::info('Editing property', [
+                'property_id' => $id,
+                'user_id' => Auth::id(),
+                'property_user_id' => $property->user_id
+            ]);
+            
+            // Check if current user is authorized to edit this property
+            if (!$this->canManageProperty($property)) {
+                return redirect()->route('properties.index')
+                    ->with('error', 'You are not authorized to edit this property.');
+            }
+            
+            // Load property with its relationships properly
+            $property->load([
+                'features',
+                'images' => function($query) {
+                    $query->orderBy('sort_order', 'asc')->orderBy('id', 'asc');
+                },
+                'type',
+                'area.governorate'
+            ]);
+            
+            Log::info('Property loaded with relationships', [
+                'features_count' => $property->features->count(),
+                'images_count' => $property->images->count(),
+                'images_details' => $property->images->map(function($img) {
+                    return [
+                        'id' => $img->id,
+                        'path' => $img->image_path,
+                        'is_primary' => $img->is_primary,
+                        'sort_order' => $img->sort_order,
+                        'file_exists' => Storage::disk('public')->exists($img->image_path)
+                    ];
+                })
+            ]);
+            
+            // Get data for form dropdowns
+            $propertyTypes = PropertyType::orderBy('name')->get();
+            $governorates = Governorate::orderBy('name')->get();
+            $areas = Area::orderBy('name')->get();
+            $features = Feature::orderBy('name')->get();
+            
+            return view('properties.edit', compact(
+                'property', 
+                'propertyTypes', 
+                'governorates', 
+                'areas', 
+                'features'
+            ));
+            
+        } catch (\Exception $e) {
+            Log::error('Error in edit method', [
+                'property_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('properties.my')
+                ->with('error', 'Error loading property for editing: ' . $e->getMessage());
         }
-        
-        // Load property with its relationships
-        $property->load(['features']);
-        
-        // Get data for form dropdowns
-        $propertyTypes = PropertyType::all();
-        $governorates = Governorate::orderBy('name')->get();
-        $areas = Area::orderBy('name')->get();
-        $features = Feature::orderBy('name')->get();
-        
-        // Get the property's current features IDs for pre-selection
-        $selectedFeatures = $property->features->pluck('id')->toArray();
-        
-        return view('properties.edit', compact(
-            'property', 
-            'propertyTypes', 
-            'governorates', 
-            'areas', 
-            'features',
-            'selectedFeatures'
-        ));
     }
     
     /**
      * Update property in database
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Property  $property
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, Property $property)
-    {
-        // Check if current user is authorized to update this property
+     
+ * Update property in database
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  int  $id
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function update(Request $request, $id)
+{
+    try {
+        Log::info('PropertyController update method called', [
+            'property_id' => $id,
+            'user_id' => Auth::id(),
+            'has_files' => $request->hasFile('images')
+        ]);
+        
+        // Find the property
+        $property = Property::findOrFail($id);
+        
+        // Check authorization
         if (!$this->canManageProperty($property)) {
             return redirect()->route('properties.index')
                 ->with('error', 'You are not authorized to update this property.');
         }
+        
+        // Save original status
+        $originalStatus = $property->status;
         
         // Validate request
         $validated = $request->validate([
@@ -367,47 +429,94 @@ class PropertyController extends Controller
             'features.*' => 'exists:features,id',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'primary_image' => 'nullable|integer'
-        ]);
-
-        // Update property
-        $property->update([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'price' => $validated['price'],
-            'size' => $validated['size'],
-            'bedrooms' => $validated['bedrooms'],
-            'bathrooms' => $validated['bathrooms'],
-            'parking_spaces' => $request->parking_spaces,
-            'year_built' => $request->year_built,
-            'property_type_id' => $validated['property_type_id'],
-            'area_id' => $validated['area_id'],
-            'address' => $validated['address'],
-            'purpose' => $validated['purpose'],
-            'status' => $this->userIsAdmin() ? $property->status : 'pending', // Reset to pending only if not admin
         ]);
         
-        // Update features (sync will remove old ones and add new ones)
-        if ($request->has('features')) {
-            $property->features()->sync($request->features);
-        } else {
-            // If no features selected, detach all
-            $property->features()->detach();
+        // Determine new status
+        $newStatus = $originalStatus;
+        if (!$this->userIsAdmin()) {
+            if (in_array($originalStatus, ['approved', 'rejected'])) {
+                $newStatus = 'pending';
+            }
         }
         
-        // Handle new image uploads if provided
-        if ($request->hasFile('images')) {
-            $this->uploadPropertyImages($property, $request->file('images'));
+        // Start transaction - بدون foreign key manipulation
+        DB::beginTransaction();
+        
+        try {
+            // Update property using Eloquent
+            $property->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'price' => $validated['price'],
+                'size' => $validated['size'],
+                'bedrooms' => $validated['bedrooms'],
+                'bathrooms' => $validated['bathrooms'],
+                'parking_spaces' => $validated['parking_spaces'] ?? null,
+                'year_built' => $validated['year_built'] ?? null,
+                'property_type_id' => $validated['property_type_id'],
+                'area_id' => $validated['area_id'],
+                'address' => $validated['address'],
+                'purpose' => $validated['purpose'],
+                'status' => $newStatus,
+            ]);
+            
+            Log::info('Property basic data updated');
+            
+            // Update features using sync - أسهل وأأمن طريقة
+            if ($request->has('features') && is_array($request->features)) {
+                $property->features()->sync($request->features);
+                Log::info('Features synced', ['count' => count($request->features)]);
+            } else {
+                $property->features()->sync([]); // Remove all features
+                Log::info('All features removed');
+            }
+            
+            // Handle new images if provided
+            if ($request->hasFile('images')) {
+                $validImages = array_filter($request->file('images'), function($image) {
+                    return $image && $image->isValid();
+                });
+                
+                if (!empty($validImages)) {
+                    $this->uploadPropertyImages($property, $validImages);
+                    Log::info('New images uploaded', ['count' => count($validImages)]);
+                }
+            }
+            
+            DB::commit();
+            Log::info('Transaction committed successfully');
+            
+            // Success message
+            $statusMessage = '';
+            if (!$this->userIsAdmin()) {
+                if ($originalStatus === 'approved' && $newStatus === 'pending') {
+                    $statusMessage = ' Your property is now pending approval due to the changes made.';
+                } elseif ($originalStatus === 'rejected' && $newStatus === 'pending') {
+                    $statusMessage = ' Your property is now pending approval after the updates.';
+                }
+            }
+            
+            return redirect()->route('properties.my')
+                ->with('success', 'Property updated successfully.' . $statusMessage);
+                
+        } catch (\Exception $innerException) {
+            DB::rollBack();
+            throw $innerException;
         }
         
-        // If only primary image was changed (no new uploads)
-        elseif ($request->filled('primary_image')) {
-            $this->updatePrimaryImage($property, $request->primary_image);
-        }
-
-        return redirect()->route('properties.my')
-            ->with('success', 'Property updated successfully and is pending approval.');
+    } catch (\Exception $e) {
+        Log::error('Property update failed', [
+            'property_id' => $id,
+            'error' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => $e->getFile()
+        ]);
+        
+        return redirect()->back()
+            ->with('error', 'An error occurred while updating the property: ' . $e->getMessage())
+            ->withInput();
     }
+}
     
     /**
      * Show seller's properties
@@ -422,9 +531,10 @@ class PropertyController extends Controller
                 ->with('error', 'You must be logged in to view your properties.');
         }
         
-        // Get all properties belonging to the current user
+        // Get all properties belonging to the current user (excluding archived and soft-deleted)
         $properties = Property::with(['type', 'area', 'images'])
                     ->where('user_id', Auth::id())
+                    ->where('status', '!=', 'archived')
                     ->orderBy('created_at', 'desc')
                     ->paginate(8);
         
@@ -434,29 +544,45 @@ class PropertyController extends Controller
     /**
      * Delete specific property
      *
-     * @param  \App\Models\Property  $property
+     * @param  int  $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Property $property)
+    public function destroy($id)
     {
-        // Check if current user is authorized to delete this property
+        // Find the property by ID
+        $property = Property::findOrFail($id);
+        
         if (!$this->canManageProperty($property)) {
             return redirect()->route('properties.index')
                 ->with('error', 'You are not authorized to delete this property.');
         }
         
-        // Delete all associated images from storage
-        foreach ($property->images as $image) {
-            if (Storage::disk('public')->exists($image->image_path)) {
-                Storage::disk('public')->delete($image->image_path);
+        try {
+            DB::beginTransaction();
+            
+            // Delete all property images from storage
+            foreach ($property->images as $image) {
+                if (Storage::disk('public')->exists($image->image_path)) {
+                    Storage::disk('public')->delete($image->image_path);
+                }
             }
+            
+            // Delete the property (this will cascade delete images and features due to foreign key constraints)
+            $property->delete();
+            
+            DB::commit();
+            
+            return redirect()->route('properties.my')
+                ->with('success', 'Property deleted successfully.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Property deletion failed: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->with('error', 'An error occurred while deleting the property. Please try again.');
         }
-        
-        // Delete property (images will be cascade deleted due to foreign key constraints)
-        $property->delete();
-        
-        return redirect()->route('properties.my')
-            ->with('success', 'Property deleted successfully.');
     }
     
     /**
@@ -483,26 +609,39 @@ class PropertyController extends Controller
                 ->with('error', 'Cannot delete the only image. Properties must have at least one image.');
         }
         
-        // Get file path
-        $filePath = $image->image_path;
-        
-        // If this is the primary image, set another image as primary
-        if ($image->is_primary) {
-            $nextImage = $property->images()->where('id', '!=', $image->id)->first();
-            if ($nextImage) {
-                $nextImage->update(['is_primary' => true]);
+        try {
+            DB::beginTransaction();
+            
+            // Get file path
+            $filePath = $image->image_path;
+            
+            // If this is the primary image, set another image as primary
+            if ($image->is_primary) {
+                $nextImage = $property->images()->where('id', '!=', $image->id)->first();
+                if ($nextImage) {
+                    $nextImage->update(['is_primary' => true]);
+                }
             }
+            
+            // Delete from storage if file exists
+            if (Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+            }
+            
+            // Delete from database
+            $image->delete();
+            
+            DB::commit();
+            
+            return back()->with('success', 'Image deleted successfully.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Image deletion failed: ' . $e->getMessage());
+            
+            return back()->with('error', 'Failed to delete image. Please try again.');
         }
-        
-        // Delete from storage if file exists
-        if (Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
-        }
-        
-        // Delete from database
-        $image->delete();
-        
-        return back()->with('success', 'Image deleted successfully.');
     }
     
     /**
@@ -512,45 +651,175 @@ class PropertyController extends Controller
      * @param  array  $images
      * @return void
      */
-    private function uploadPropertyImages(Property $property, array $images)
-    {
-        // Determine if this is the first upload (no existing images)
-        $isFirstUpload = $property->images->isEmpty();
-        $i = $property->images->count();
+    
+
+    /**
+     * Helper method to handle image uploads
+     *
+    
+     */
+    /**
+ * Helper method to handle image uploads
+ *
+ * @param  \App\Models\Property  $property
+ * @param  array  $images
+ * @return void
+ */
+private function uploadPropertyImages(Property $property, array $images)
+{
+    try {
+        Log::info('Starting image upload', [
+            'property_id' => $property->id,
+            'new_images_count' => count($images)
+        ]);
         
-        foreach ($images as $image) {
-            // Generate a filename based on property ID and timestamp
-            $filename = 'property_' . $property->id . '_' . time() . '_' . $i . '.' . $image->getClientOriginalExtension();
+        // Get current images count للترتيب
+        $currentImagesCount = $property->images()->count();
+        $hasExistingImages = $currentImagesCount > 0;
+        
+        Log::info('Current property state', [
+            'existing_images' => $currentImagesCount,
+            'has_primary' => $property->images()->where('is_primary', true)->exists()
+        ]);
+        
+        // Create directory if needed
+        if (!Storage::disk('public')->exists('properties/images')) {
+            Storage::disk('public')->makeDirectory('properties/images');
+        }
+        
+        $uploadedCount = 0;
+        
+        foreach ($images as $index => $image) {
+            if (!$image || !$image->isValid()) {
+                Log::warning('Skipping invalid image', ['index' => $index]);
+                continue;
+            }
             
-            // Store image in storage/app/public/properties/images
+            // Generate unique filename
+            $filename = 'property_' . $property->id . '_' . time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            
+            // Store image
             $path = $image->storeAs('properties/images', $filename, 'public');
             
+            if (!$path) {
+                Log::error('Failed to store image', ['filename' => $filename]);
+                continue;
+            }
+            
             // Create image record
-            $property->images()->create([
+            $isPrimary = false;
+            // Only set as primary if no existing images AND this is the first new image
+            if (!$hasExistingImages && $index === 0) {
+                $isPrimary = true;
+            }
+            
+            $imageRecord = new PropertyImage([
+                'property_id' => $property->id,
                 'image_path' => $path,
-                'is_primary' => ($isFirstUpload && $i === 0), // First image is primary only if no images existed before
-                'sort_order' => $i
+                'is_primary' => $isPrimary,
+                'sort_order' => $currentImagesCount + $uploadedCount
             ]);
             
-            $i++;
+            $imageRecord->save();
+            
+            Log::info('Image uploaded successfully', [
+                'image_id' => $imageRecord->id,
+                'path' => $path,
+                'is_primary' => $isPrimary,
+                'sort_order' => $imageRecord->sort_order
+            ]);
+            
+            $uploadedCount++;
         }
+        
+        Log::info('Image upload completed', [
+            'uploaded_count' => $uploadedCount,
+            'total_images_now' => $property->images()->count()
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Image upload failed', [
+            'property_id' => $property->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        throw $e;
+    }
+}
+    /**
+     * Archive a property (mark as sold/not available)
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function archive($id)
+    {
+        // Find the property by ID
+        $property = Property::findOrFail($id);
+        
+        // Check if current user is authorized to archive this property
+        if (!$this->canManageProperty($property)) {
+            return redirect()->route('properties.index')
+                ->with('error', 'You are not authorized to archive this property.');
+        }
+        
+        // Update property status to archived
+        $property->update([
+            'status' => 'archived',
+            'archived_at' => now()
+        ]);
+        
+        return redirect()->route('properties.my')
+            ->with('success', 'Property has been archived successfully. It will no longer appear in public listings.');
     }
     
     /**
-     * Helper method to update primary image
+     * Unarchive a property (make available again)
      *
-     * @param  \App\Models\Property  $property
-     * @param  int  $primaryImageId
-     * @return void
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
      */
-    private function updatePrimaryImage(Property $property, $primaryImageId)
+    public function unarchive($id)
     {
-        // Reset all images to non-primary
-        $property->images()->update(['is_primary' => false]);
+        // Find the property by ID
+        $property = Property::findOrFail($id);
         
-        // Set selected image as primary
-        if (is_numeric($primaryImageId)) {
-            $property->images()->where('id', $primaryImageId)->update(['is_primary' => true]);
+        // Check if current user is authorized to unarchive this property
+        if (!$this->canManageProperty($property)) {
+            return redirect()->route('properties.index')
+                ->with('error', 'You are not authorized to unarchive this property.');
         }
+        
+        // Update property status back to pending (will require admin approval again)
+        $property->update([
+            'status' => 'pending',
+            'archived_at' => null
+        ]);
+        
+        return redirect()->route('properties.my')
+            ->with('success', 'Property has been unarchived and is now pending approval again.');
+    }
+    
+    /**
+     * Show seller's archived properties
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
+    public function archivedProperties()
+    {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'You must be logged in to view your archived properties.');
+        }
+        
+        // Get all archived properties belonging to the current user
+        $properties = Property::with(['type', 'area', 'images'])
+                    ->where('user_id', Auth::id())
+                    ->where('status', 'archived')
+                    ->orderBy('archived_at', 'desc')
+                    ->paginate(8);
+        
+        return view('properties.archived', compact('properties'));
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Testimonial;
 
 use Illuminate\Http\Request;
 
@@ -25,4 +26,12 @@ class HomeController extends Controller
     {
         return view('home');
     }
+    public function getTestimonials()
+{
+    return Testimonial::with('area')
+        ->where('is_active', true)
+        ->latest()
+        ->take(6)
+        ->get();
+}
 }
