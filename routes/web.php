@@ -281,7 +281,6 @@ Route::get('/test-image', function() {
     return 'No image found';
 });
 
-// أضيفي هذا الـ route في web.php للتحقق من حالة العقار
 Route::get('/debug-property/{id}', function($id) {
     
     $property = \App\Models\Property::with(['images', 'features'])->find($id);
@@ -290,7 +289,6 @@ Route::get('/debug-property/{id}', function($id) {
         return 'Property not found';
     }
     
-    // التحقق من التحقق من الهوية بطريقة آمنة
     $isAuthenticated = Auth::check();
     $currentUserId = $isAuthenticated ? Auth::id() : null;
     $currentUserRole = $isAuthenticated ? Auth::user()->role : null;
